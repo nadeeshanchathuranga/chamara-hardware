@@ -1,0 +1,30 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '22'  
+
+    - name: Install sshpass
+      run: sudo apt-get install -y sshpass
+
+    - name: Deploy to Server and Run Script
+      env:
+        SERVER_IP: ${{ secrets.SERVER_IP }}
+        ROOT_PASSWORD: ${{ secrets.ROOT_PASSWORD }}
+      run: |
+        sshpass -p "$ROOT_PASSWORD" scp -o StrictHostKeyChecking=no -r * root@$SERVER_IP:/var/www/html/jaanpos/
+        sshpass -p "$ROOT_PASSWORD" ssh -o StrictHostKeyChecking=no root@$SERVER_IP "cd /var/www/html/jaanpos && bash deploy.sh"

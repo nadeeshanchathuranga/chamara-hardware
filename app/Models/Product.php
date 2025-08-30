@@ -5,11 +5,11 @@ namespace App\Models;
 use App\Traits\GeneratesUniqueCode;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+
 
 class Product extends Model
 {
-    use HasFactory, GeneratesUniqueCode, SoftDeletes;
+    use HasFactory, GeneratesUniqueCode;
     protected $fillable = [
         'category_id',
         'supplier_id',
@@ -67,5 +67,5 @@ class Product extends Model
 
     protected $casts = [
         'expire_date' => 'date', // Cast expiry_date as a date
-    ];    
+    ];
 }

@@ -83,7 +83,7 @@
                   <!-- Cost Price input -->
                 </div>
 
-                
+
 
                 <div class="flex items-center gap-8 mt-6">
                   <div class="w-full">
@@ -102,7 +102,7 @@
                         form.errors.code
                       }}</span>
                     </div>
-                    
+
                   </div>
                   <!-- Cost Price input -->
                   <div class="w-full">
@@ -136,7 +136,7 @@
                         form.errors.name
                       }}</span>
                     </div>
-                    
+
                   </div>
                 </div>
 
@@ -151,7 +151,7 @@
                         v-model="form.purchase_date"
                         type="date"
                         id="purchase_date"
-                        required
+                       
                         class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
                       />
                       <span v-if="form.errors.purchase_date" class="mt-4 text-red-500">{{

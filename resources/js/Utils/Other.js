@@ -1,5 +1,5 @@
 export const generateOrderId = () => {
-    const prefix = "CM";
+    const prefix = "CH";
 
     // Get today's date in DD.MM.YY format
     const today = new Date();

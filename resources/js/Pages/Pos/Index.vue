@@ -150,6 +150,13 @@
                                 <p class="text-xl text-black">
                                     {{ item.name }}
                                 </p>
+
+<p class="text-xl text-black">
+    <span class="font-semibold">Cost Price:</span>
+    <span class="font-bold">{{ item.cost_price }}</span>
+</p>
+
+
                                 <div class="flex items-center justify-between w-full">
                                     <div class="flex space-x-4">
                                         <p @click="incrementQuantity(item.id)"
@@ -170,28 +177,86 @@
                                     </div>
                                     <div class="flex items-center justify-center">
                                         <div>
-                                            <p @click="applyDiscount(item.id)" v-if="
-                                                item.discount &&
-                                                item.discount > 0 &&
-                                                item.apply_discount == false &&
-                                                !appliedCoupon
-                                            "
-                                                class="cursor-pointer py-1 text-center px-4 bg-green-600 rounded-xl font-bold text-white tracking-wider">
-                                                Apply {{ item.discount }}% off
-                                            </p>
 
-                                            <p v-if="
-                                                item.discount &&
-                                                item.discount > 0 &&
-                                                item.apply_discount == true &&
-                                                !appliedCoupon
-                                            " @click="removeDiscount(item.id)"
-                                                class="cursor-pointer py-1 text-center px-4 bg-red-600 rounded-xl font-bold text-white tracking-wider">
-                                                Remove {{ item.discount }}% Off
-                                            </p>
+
+
+<div class="flex items-center space-x-2">
+  <!-- Input discount % -->
+<input
+  type="number"
+  v-model.number="item.discount"
+  min="0"
+  max="100"
+  placeholder="%"
+  @input="onDiscountChange(item)"
+  class="w-24 h-12 px-3 py-2 text-lg text-black text-center placeholder-gray-400
+         border border-gray-400 rounded-lg shadow-sm
+         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+         disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+/>
+
+
+  <!-- Apply discount -->
+  <!-- <p
+    v-if="item.discount > 0 && !item.apply_discount && !appliedCoupon"
+    @click="applyDiscount(item.id)"
+    class="cursor-pointer py-1 text-center px-4 bg-green-600 rounded-xl font-bold text-white tracking-wider"
+  >
+    Apply {{ item.discount }}% off
+  </p> -->
+
+  <!-- Remove discount -->
+  <!-- <p
+    v-if="item.discount > 0 && item.apply_discount && !appliedCoupon"
+    @click="removeDiscount(item.id)"
+    class="cursor-pointer py-1 text-center px-4 bg-red-600 rounded-xl font-bold text-white tracking-wider"
+  >
+    Remove {{ item.discount }}% Off
+  </p> -->
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                                             <p class="text-2xl font-bold text-black text-right">
-                                                {{ item.selling_price }}
-                                                LKR
+                                               {{ item.apply_discount ? item.discounted_price : item.selling_price }} LKR
                                             </p>
                                         </div>
                                     </div>
@@ -421,7 +486,7 @@
                             </div>
                         </div>
                         <!-- Submit Button -->
-                         
+
                         <div class="flex justify-center gap-between w-full space-x-8">
                             <button
                                 @click="handleReturnBillSave"
@@ -478,6 +543,33 @@ const orderid = computed(() => generateOrderId());
 
 const errorMessage = ref("");
 
+const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+
+const onDiscountChange = (item) => {
+  // keep original selling price only once
+  if (!item.original_price) {
+    item.original_price = Number(item.selling_price);
+  }
+
+  // normalize discount
+  let d = Number(item.discount);
+  if (Number.isNaN(d)) d = 0;
+  d = clamp(d, 0, 100);
+  item.discount = d; // writes back the clamped value to the input
+
+  if (d === 0) {
+    item.apply_discount = false;
+    item.discounted_price = item.original_price;
+  } else {
+    item.apply_discount = true;
+    const price = item.original_price * (1 - d / 100);
+    item.discounted_price = Number(price.toFixed(2));
+  }
+};
+
+
+
+
 // const balance = ref(0);
 
 const handleModalOpenUpdate = (newValue) => {
@@ -485,7 +577,7 @@ const handleModalOpenUpdate = (newValue) => {
     if (!newValue) {
         refreshData();
     }
-}; 
+};
 
 const props = defineProps({
     loggedInUser: Object, // Using backend product name to avoid messing with selected products
@@ -540,10 +632,10 @@ const handleReturnBillSave = () => {
     }
     errorMessage.value = "";
     isReturnBillsModalOpen.value = false
-   
-   
-};   
-    
+
+
+};
+
 
 const openReturnBills = () => {
     isReturnBillsModalOpen.value = true;
@@ -552,7 +644,7 @@ const ReturnbillForm = useForm({
     order_id:"",
     reason:"",
     return_date:"",
-    
+
 });
 
 const employee_id = ref("");
@@ -643,7 +735,7 @@ const submitOrder = async () => {
             appliedCoupon: appliedCoupon.value, // Add this
             return_items: returnItemsData // Add this
         });
-        
+
         isSuccessModalOpen.value = true;
         console.log(response.data); // Handle success
     } catch (error) {
@@ -663,7 +755,7 @@ const filteredSaleItems = computed(() => {
     if (!props.saleItems || !Array.isArray(props.saleItems)) {
         return [];
     }
-    
+
     const items = props.saleItems.filter((item) => item.sale_id === ReturnbillForm.order_id);
     saleItemsState.value = items.map((item) => ({ ...item, reason: "", return_date: "" }));
     return saleItemsState.value;
@@ -915,7 +1007,7 @@ onMounted(async() => {
         console.error("Error fetching sales:", error);
         sales.value = [];
     }
-    
+
 });
 
 // const loadSales = async () => {
@@ -932,20 +1024,30 @@ onMounted(async() => {
 // };
 
 const applyDiscount = (id) => {
-    products.value.forEach((product) => {
-        if (product.id === id) {
-            product.apply_discount = true;
-        }
-    });
+  products.value.forEach((product) => {
+    if (product.id === id && product.discount > 0) {
+      // Keep original price if not set
+      if (!product.original_price) {
+        product.original_price = product.selling_price;
+      }
+      // Apply discounted price
+      product.discounted_price =
+        product.original_price - (product.original_price * product.discount) / 100;
+
+      product.apply_discount = true;
+    }
+  });
 };
 
-const removeDiscount = (id) => {
-    products.value.forEach((product) => {
-        if (product.id === id) {
-            product.apply_discount = false;
-        }
-    });
-};
+// const removeDiscount = (id) => {
+//   products.value.forEach((product) => {
+//     if (product.id === id) {
+//       product.apply_discount = false;
+//       product.discounted_price = product.original_price; // Restore original price
+//     }
+//   });
+// };
+
 
 const handleSelectedProducts = (selectedProducts) => {
     selectedProducts.forEach((fetchedProduct) => {

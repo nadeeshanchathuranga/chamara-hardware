@@ -176,6 +176,13 @@
                           <div
                             class="flex justify-center space-x-2 items-start w-full"
                           >
+
+<div class="flex space-x-1 text-gray-400">
+                              <p class="font-bold">Color:</p>
+                              <p>{{ product.color?.name || "N/A" }}</p>
+                            </div>
+
+
                             <div class="flex space-x-1 text-gray-400">
                               <p class="font-bold">Color:</p>
                               <p>{{ product.color?.name || "N/A" }}</p>
@@ -206,7 +213,7 @@
                                 class="text-xl font-bold tracking-wider text-green-500"
                               >
                                 <i class="ri-checkbox-blank-circle-fill"></i> In
-                                Stock
+                                Stock ({{ product.stock_quantity }})
                               </p>
                               <p
                                 v-else

@@ -208,13 +208,13 @@ const handlePrintReceipt = () => {
           }
           table {
               width: 100%;
-              font-size: 12px;
+              font-size: 10px;
               border-collapse: collapse;
               margin-top: 8px;
           }
           table th, table td {
               padding: 6px 8px;
-              
+
           }
           table th {
               text-align: left;
@@ -251,99 +251,134 @@ const handlePrintReceipt = () => {
               font-style: italic;
           }
 
-          
+
       </style>
   </head>
-  <body>
-      <div class="receipt-container">
-                <div class="header">
-                  <img src="/images/billlogo.png" style="width: 120px; height: 70px;" />
-           ${companyInfo?.value?.name ? `<h1>${companyInfo.value.name}</h1>` : ''}
-  ${companyInfo?.value?.address ? `<p>${companyInfo.value.address}</p>` : ''}
-  ${(companyInfo?.value?.phone || companyInfo?.value?.phone2 || companyInfo?.value?.email)
-            ? `<p>${companyInfo.value.phone || ''} | ${companyInfo.value.phone2 || ''}  ${companyInfo.value.email || ''}</p>`
-            : ''}
+ <body>
+  <div class="receipt-container">
+    <!-- Header -->
+    <div class="header" style="text-align:center;">
+      <img src="/images/billlogo.png" style="width: 120px; height: 70px;" />
+      ${companyInfo?.value?.name ? `<h1>${companyInfo.value.name}</h1>` : ''}
+      ${companyInfo?.value?.address ? `<p>${companyInfo.value.address}</p>` : ''}
+      ${(companyInfo?.value?.phone || companyInfo?.value?.phone2 || companyInfo?.value?.email)
+        ? `<p>${companyInfo.value.phone || ''} | ${companyInfo.value.phone2 || ''} ${companyInfo.value.email || ''}</p>`
+        : ''}
+    </div>
 
-          </div>
-
-
-
-
-
-          <div class="section">
-              <div class="info-row">
-                  <div>
-                      <p>Date:</p>
-                      <small>${new Date().toLocaleDateString()} </small>
-                  </div>
-                  <div>
-                      <p>Order No:</p>
-                      <small>${props.orderid}</small>
-                  </div>
-              </div>
-              <div class="info-row">
-                  <div>
-                      <p>Customer:</p>
-                      <small>${props.customer.name}</small>
-                  </div>
-                  <div>
-                      <p>Cashier:</p>
-                      <small>${props.cashier.name}</small>
-                  </div>
-              </div>
-          </div>
-          <div class="section">
-              <table>
-                  <thead>
-                      <tr>
-                          <th>Description</th>
-                          <th style="text-align: center;">Qty</th>
-                          <th style="text-align: right;">Price</th>
-                      </tr>
-                  </thead>
-                  <tbody>
-                      ${productRows}
-                  </tbody>
-              </table>
-          </div>
-          <div class="totals">
-              <div>
-                  <span>Sub Total</span>
-                  <span>${(Number(props.subTotal) || 0).toFixed(2)} LKR</span>
-              </div>
-              <div>
-                  <span>Discount</span>
-                  <span>${(Number(props.totalDiscount) || 0).toFixed(2)} LKR</span>
-              </div>
-              <div>
-                  <span>Custom Discount</span>
-                  <span>
-                    ${(Number(props.custom_discount) || 0).toFixed(2)}
-                    ${props.custom_discount_type === 'percent' ? '%' :
-                    props.custom_discount_type === 'fixed' ? 'LKR' : ''}
-                  </span>
-              </div>
-              <div>
-                  <span>Total</span>
-                  <span>${(Number(props.total) || 0).toFixed(2)} LKR</span>
-              </div>
-              <div>
-                  <span>Cash</span>
-                  <span>${(Number(props.cash) || 0).toFixed(2)} LKR</span>
-              </div>
-              <div style="font-weight: bold;">
-                  <span>Balance</span>
-                  <span>${(Number(props.balance) || 0).toFixed(2)} LKR</span>
-              </div>
-          </div>
-          <div class="footer">
-              <p>THANK YOU COME AGAIN</p>
-              <p class="italic">Let the quality define its own standards</p>
-               <p style="font-weight: bold;">Powered by JAAN Network Ltd.</p>
-               <p>${new Date().toLocaleTimeString()} </p>
-          </div>
+    <!-- Order Info -->
+    <div class="section">
+      <div class="info-row">
+        <div>
+          <p>Date:</p>
+          <small>${new Date().toLocaleDateString()} </small>
+        </div>
+        <div>
+          <p>Order No:</p>
+          <small>${props.orderid}</small>
+        </div>
       </div>
-  </body>
+      <div class="info-row">
+        <div>
+          <p>Customer:</p>
+          <small>${props.customer.name}</small>
+        </div>
+        <div>
+          <p>Cashier:</p>
+          <small>${props.cashier.name}</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items Table -->
+    <div class="section">
+     <table style="width:100%; border-collapse: collapse;">
+  <thead>
+    <tr>
+      <th style="text-align:left;">Item</th>
+
+      <th style="text-align:center;">Qty * Price</th>
+
+      <th style="text-align:right;">Dis</th>
+      <th style="text-align:right;">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    ${props.products.map(item => {
+      const originalPrice = Number(item.selling_price) || 0;
+      const discountedPrice = item.apply_discount
+        ? Number(item.discounted_price)
+        : originalPrice;
+      const discountPercent = item.apply_discount && item.discount
+        ? `${item.discount}%`
+        : "0%";
+
+      return `
+        <tr>
+
+
+
+
+<td>
+            ${item.name}<br>
+            <small><b>Cost Price: ${originalPrice.toFixed(2)}</b></small>
+          </td>
+
+
+          <td style="text-align:center;">${item.quantity} * ${discountedPrice.toFixed(2)}</td>
+
+          <td style="text-align:right;">${discountPercent}</td>
+          <td style="text-align:right;">${(discountedPrice * item.quantity).toFixed(2)}</td>
+        </tr>
+      `;
+    }).join('')}
+  </tbody>
+</table>
+
+    </div>
+
+    <!-- Totals -->
+    <div class="totals">
+      <div>
+        <span>Sub Total</span>
+        <span>${(Number(props.subTotal) || 0).toFixed(2)} LKR</span>
+      </div>
+      <div>
+        <span>Discount</span>
+        <span>${(Number(props.totalDiscount) || 0).toFixed(2)} LKR</span>
+      </div>
+      <div>
+        <span>Custom Discount</span>
+        <span>
+          ${(Number(props.custom_discount) || 0).toFixed(2)}
+          ${props.custom_discount_type === 'percent' ? '%' :
+            props.custom_discount_type === 'fixed' ? 'LKR' : ''}
+        </span>
+      </div>
+      <div>
+        <span>Total</span>
+        <span>${(Number(props.total) || 0).toFixed(2)} LKR</span>
+      </div>
+      <div>
+        <span>Cash</span>
+        <span>${(Number(props.cash) || 0).toFixed(2)} LKR</span>
+      </div>
+      <div style="font-weight: bold;">
+        <span>Balance</span>
+        <span>${(Number(props.balance) || 0).toFixed(2)} LKR</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer" style="text-align:center; margin-top:10px;">
+      <p>THANK YOU COME AGAIN</p>
+      <p class="italic">Let the quality define its own standards</p>
+      <p style="font-weight: bold;">Powered by JAAN Network Ltd.</p>
+      <p>${new Date().toLocaleTimeString()} </p>
+    </div>
+  </div>
+</body>
+
   </html>
   `;
 

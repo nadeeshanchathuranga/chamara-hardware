@@ -20,7 +20,7 @@ class DatabaseSeeder extends Seeder
         'name' => 'admin',
         'email' => 'admin@admin.com',
         'role_type' => 'Admin',
-        'password' => Hash::make('Admin@cm590rt'),
+        'password' => Hash::make('admin@chamara'),
     ]);
 }
 
@@ -29,7 +29,7 @@ if (!\App\Models\User::where('email', 'manager@manager.com')->exists()) {
         'name' => 'manager',
         'email' => 'manager@manager.com',
         'role_type' => 'Manager',
-        'password' => Hash::make('Str0ngM@nagerP@55!'),
+        'password' => Hash::make('manager@chamara'),
     ]);
 }
 
@@ -38,22 +38,22 @@ if (!\App\Models\User::where('email', 't1@cashier.com')->exists()) {
         'name' => 't1',
         'email' => 't1@cashier.com',
         'role_type' => 'Cashier',
-        'password' => Hash::make('C@sh1erR@ndom!1'),
+        'password' => Hash::make('t1@chamara'),
     ]);
 }
 
-if (!\App\Models\User::where('email', 'demo@demo.com')->exists()) {
-    \App\Models\User::factory()->create([
-        'name' => 'demo',
-        'email' => 'demo@demo.com',
-        'role_type' => 'Admin',
-        'password' => Hash::make('D3moStr0ngP@ss!'),
-    ]);
-}
+// if (!\App\Models\User::where('email', 'demo@demo.com')->exists()) {
+//     \App\Models\User::factory()->create([
+//         'name' => 'demo',
+//         'email' => 'demo@demo.com',
+//         'role_type' => 'Admin',
+//         'password' => Hash::make('D3moStr0ngP@ss!'),
+//     ]);
+// }
 
 
-        
-        
+
+
         // $this->call([
         //     ColorSeeder::class,
         //     SizeSeeder::class,

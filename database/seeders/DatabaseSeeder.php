@@ -35,10 +35,10 @@ if (!\App\Models\User::where('email', 'manager@manager.com')->exists()) {
 
 if (!\App\Models\User::where('email', 't1@cashier.com')->exists()) {
     \App\Models\User::factory()->create([
-        'name' => 't1',
+        'name' => 'cashier',
         'email' => 't1@cashier.com',
         'role_type' => 'Cashier',
-        'password' => Hash::make('t1@chamara'),
+        'password' => Hash::make('cashier@chamara'),
     ]);
 }
 

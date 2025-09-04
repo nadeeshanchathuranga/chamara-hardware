@@ -178,7 +178,7 @@
                         v-model="form.purchase_date"
                         type="date"
                         id="purchase_date"
-                        required
+                         
                         class="w-full px-4 py-2 mt-2 text-black rounded-md focus:outline-none focus:ring focus:ring-blue-600"
                       />
                       <span v-if="form.errors.purchase_date" class="mt-4 text-red-500">{{
@@ -316,7 +316,7 @@
 
                 <div class="flex items-center gap-8 mt-6">
                   <!-- Cost Price input -->
-                  <div class="w-full">
+                  <div class="w-full hidden">
                     <label
                       for="cost_price"
                       class="block text-sm font-medium text-gray-300"
@@ -338,7 +338,7 @@
                   </div>
 
                   <!-- Selling Price input -->
-                  <div class="w-full">
+                  <div class="w-full hidden">
                     <label
                       for="discounted_price"
                       class="block text-sm font-medium text-gray-300"

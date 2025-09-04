@@ -323,7 +323,7 @@
                     >
                   </div>
                 </div>
-                
+
                 <div class="flex items-center gap-8">
                   <div class="w-full">
                     <label class="block text-sm font-medium text-gray-300"
@@ -359,7 +359,7 @@
                       }}</span>
                     </div>
                 </div>
-                
+
                 <div>
                   <div class="flex items-center gap-8">
                     <!-- First select box with label and error -->
@@ -380,7 +380,7 @@
                       >{{ form.errors.purchase_date }}</span
                     >
                   </div>
-                    
+
                      <div class="w-full">
                     <label class="block text-sm font-medium text-gray-300"
                       >Expire Date:</label
@@ -397,7 +397,7 @@
                       class="mt-4 text-red-500"
                       >{{ form.errors.expire_date }}</span
                     >
-                  </div> 
+                  </div>
                   </div>
                 </div>
                 <div>
@@ -502,9 +502,9 @@
                       {{ form.errors.stock_quantity }}
                     </span>
                   </div>
-                </div>
-                <div class="flex items-center gap-8 mt-6">
-                  <div class="w-full">
+
+
+                    <div class="w-full">
                     <label
                       for="selling_price"
                       class="block text-sm font-medium text-gray-300"
@@ -526,7 +526,10 @@
                       {{ form.errors.selling_price }}
                     </span>
                   </div>
-                  <div class="w-full">
+                </div>
+                <div class="flex items-center gap-8 mt-6">
+
+                  <div class="w-full hidden">
                     <label
                       for="discount"
                       class="block text-sm font-medium text-gray-300"
@@ -542,7 +545,7 @@
                       placeholder="Enter discount percentage"
                     />
                   </div>
-                  <div class="w-full">
+                  <div class="w-full hidden">
                     <label
                       for="discounted_price"
                       class="block text-sm font-medium text-gray-300"

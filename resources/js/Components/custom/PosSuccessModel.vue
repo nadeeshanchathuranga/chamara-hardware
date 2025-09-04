@@ -258,7 +258,7 @@ const handlePrintReceipt = () => {
   <div class="receipt-container">
     <!-- Header -->
     <div class="header" style="text-align:center;">
-      <img src="/images/billlogo.png" style="width: 120px; height: 70px;" />
+      <img src="/images/billlogo.png" style="width: 150px; height: 140px;" />
       ${companyInfo?.value?.name ? `<h1>${companyInfo.value.name}</h1>` : ''}
       ${companyInfo?.value?.address ? `<p>${companyInfo.value.address}</p>` : ''}
       ${(companyInfo?.value?.phone || companyInfo?.value?.phone2 || companyInfo?.value?.email)
@@ -293,46 +293,59 @@ const handlePrintReceipt = () => {
     <!-- Items Table -->
     <div class="section">
      <table style="width:100%; border-collapse: collapse;">
-  <thead>
-    <tr>
-      <th style="text-align:left;">Item</th>
-
-      <th style="text-align:center;">Qty * Price</th>
-
-      <th style="text-align:right;">Dis</th>
-      <th style="text-align:right;">Total</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${props.products.map(item => {
-      const originalPrice = Number(item.selling_price) || 0;
-      const discountedPrice = item.apply_discount
-        ? Number(item.discounted_price)
-        : originalPrice;
-      const discountPercent = item.apply_discount && item.discount
-        ? `${item.discount}%`
-        : "0%";
-
-      return `
-        <tr>
 
 
+<thead>
+  <tr>
+    <th style="text-align:left;">Item</th>
+    <th style="text-align:center;">Qty × Price</th>
+    <th style="text-align:right;">Total</th>
+  </tr>
+</thead>
+<tbody>
+  ${props.products.map(item => {
+    const originalPrice = Number(item.selling_price) || 0;
+    const discountedPrice = item.apply_discount
+      ? Number(item.discounted_price)
+      : originalPrice;
+
+    return `
+      <tr>
+        <!-- First row: product name, price, discount -->
+        <td style="text-align:left;">
+          <b>${item.name}</b><br>
+          <small>Selling Price: ${originalPrice.toFixed(2)} LKR</small><br>
+          <small>
+           ${
+              item.discount > 0
+                ? (item.discount_type === 'percent'
+                    ? item.discount + '% off'
+                    : item.discount.toFixed(2) + ' LKR off')
+                : ''
+            }
+          </small>
+        </td>
+        <td style="text-align:center;">
+          ${item.quantity} × ${discountedPrice.toFixed(2)} LKR
+        </td>
+        <td style="text-align:right;">
+          ${(discountedPrice * item.quantity).toFixed(2)} LKR
+        </td>
+      </tr>
+    `;
+  }).join('')}
+</tbody>
 
 
-<td>
-            ${item.name}<br>
-            <small><b>Cost Price: ${originalPrice.toFixed(2)}</b></small>
-          </td>
 
 
-          <td style="text-align:center;">${item.quantity} * ${discountedPrice.toFixed(2)}</td>
 
-          <td style="text-align:right;">${discountPercent}</td>
-          <td style="text-align:right;">${(discountedPrice * item.quantity).toFixed(2)}</td>
-        </tr>
-      `;
-    }).join('')}
-  </tbody>
+
+
+
+
+
+
 </table>
 
     </div>

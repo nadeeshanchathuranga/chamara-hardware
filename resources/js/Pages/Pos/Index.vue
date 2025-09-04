@@ -152,8 +152,8 @@
                                 </p>
 
 <p class="text-xl text-black">
-    <span class="font-semibold">Cost Price:</span>
-    <span class="font-bold">{{ item.cost_price }}</span>
+    <span class="font-semibold">Selling Price:</span>
+    <span class="font-bold">{{ item.selling_price }}</span>
 </p>
 
 
@@ -180,39 +180,28 @@
 
 
 
-<div class="flex items-center space-x-2">
-  <!-- Input discount % -->
-<input
-  type="number"
-  v-model.number="item.discount"
-  min="0"
-  max="100"
-  placeholder="%"
-  @input="onDiscountChange(item)"
-  class="w-24 h-12 px-3 py-2 text-lg text-black text-center placeholder-gray-400
-         border border-gray-400 rounded-lg shadow-sm
-         focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-         disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-/>
+ <div class="flex items-center space-x-2">
+  <!-- Discount value -->
+  <input
+    type="number"
+    v-model.number="item.discount"
+    min="0"
+    placeholder="Value"
+    @input="onDiscountChange(item)"
+    class="w-24 h-12 px-3 py-2 text-lg text-black text-center
+           border border-gray-400 rounded-lg shadow-sm
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+  />
 
-
-  <!-- Apply discount -->
-  <!-- <p
-    v-if="item.discount > 0 && !item.apply_discount && !appliedCoupon"
-    @click="applyDiscount(item.id)"
-    class="cursor-pointer py-1 text-center px-4 bg-green-600 rounded-xl font-bold text-white tracking-wider"
+  <!-- Discount type -->
+  <select
+    v-model="item.discount_type"
+    @change="onDiscountChange(item)"
+    class="h-12 px-6 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
   >
-    Apply {{ item.discount }}% off
-  </p> -->
-
-  <!-- Remove discount -->
-  <!-- <p
-    v-if="item.discount > 0 && item.apply_discount && !appliedCoupon"
-    @click="removeDiscount(item.id)"
-    class="cursor-pointer py-1 text-center px-4 bg-red-600 rounded-xl font-bold text-white tracking-wider"
-  >
-    Remove {{ item.discount }}% Off
-  </p> -->
+    <option value="percent">%</option>
+    <option value="fixed">Rs</option>
+  </select>
 </div>
 
 
@@ -546,26 +535,46 @@ const errorMessage = ref("");
 const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 
 const onDiscountChange = (item) => {
-  // keep original selling price only once
+  // set & lock the original price
   if (!item.original_price) {
     item.original_price = Number(item.selling_price);
   }
 
-  // normalize discount
+  const original = Number(item.original_price) || 0;
+
+  // normalize missing fields
+  if (!item.discount_type) item.discount_type = 'percent';
+
   let d = Number(item.discount);
   if (Number.isNaN(d)) d = 0;
-  d = clamp(d, 0, 100);
-  item.discount = d; // writes back the clamped value to the input
 
-  if (d === 0) {
-    item.apply_discount = false;
-    item.discounted_price = item.original_price;
+  if (item.discount_type === 'percent') {
+    // 0–100%
+    d = clamp(d, 0, 100);
+    item.discount = d;
+    if (d === 0) {
+      item.apply_discount = false;
+      item.discounted_price = original;
+    } else {
+      item.apply_discount = true;
+      const price = original * (1 - d / 100);
+      item.discounted_price = Number(price.toFixed(2));
+    }
   } else {
-    item.apply_discount = true;
-    const price = item.original_price * (1 - d / 100);
-    item.discounted_price = Number(price.toFixed(2));
+    // fixed Rs: 0–original
+    d = clamp(d, 0, original);
+    item.discount = d;
+    if (d === 0) {
+      item.apply_discount = false;
+      item.discounted_price = original;
+    } else {
+      item.apply_discount = true;
+      const price = original - d;
+      item.discounted_price = Number(price.toFixed(2));
+    }
   }
 };
+
 
 
 
@@ -949,6 +958,7 @@ const submitBarcode = async () => {
                 products.value.push({
                     ...fetchedProduct,
                     quantity: 1,
+                     discount_type: 'percent',
                     apply_discount: false, // Add the new attribute
                 });
             }
@@ -1063,6 +1073,7 @@ const handleSelectedProducts = (selectedProducts) => {
             products.value.push({
                 ...fetchedProduct,
                 quantity: 1,
+                 discount_type: 'percent',
                 apply_discount: false, // Default additional attribute
             });
         }

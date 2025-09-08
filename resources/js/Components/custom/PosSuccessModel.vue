@@ -27,15 +27,15 @@
                         </div>
                         <div class="flex justify-center items-center space-x-4 pt-4 mt-4">
                             <p
-                                class="cursor-pointer bg-blue-600 text-white font-bold uppercase tracking-wider px-4 shadow-xl rounded py-4 rounded-xl">
+                                class="cursor-pointer bg-blue-600 text-white font-bold uppercase tracking-wider px-4 shadow-xl   py-4 rounded-xl">
                                 Send Reciept To Email
                             </p>
                             <p @click="handlePrintReceipt"
-                                class="cursor-pointer bg-blue-600 text-white font-bold uppercase tracking-wider px-4 shadow-xl rounded py-4 rounded-xl">
+                                class="cursor-pointer bg-blue-600 text-white font-bold uppercase tracking-wider px-4 shadow-xl   py-4 rounded-xl">
                                 Print Receipt
                             </p>
                             <p @click="$emit('update:open', false)"
-                                class="cursor-pointer bg-red-600 text-white font-bold uppercase tracking-wider px-4 shadow-xl rounded py-4 rounded-xl">
+                                class="cursor-pointer bg-red-600 text-white font-bold uppercase tracking-wider px-4 shadow-xl   py-4 rounded-xl">
                                 Close
                             </p>
                         </div>
@@ -310,28 +310,56 @@ const handlePrintReceipt = () => {
       : originalPrice;
 
     return `
-      <tr>
-        <!-- First row: product name, price, discount -->
-        <td style="text-align:left;">
-          <b>${item.name}</b><br>
-          <small>Selling Price: ${originalPrice.toFixed(2)} LKR</small><br>
-          <small>
-           ${
-              item.discount > 0
-                ? (item.discount_type === 'percent'
-                    ? item.discount + '% off'
-                    : item.discount.toFixed(2) + ' LKR off')
-                : ''
-            }
-          </small>
-        </td>
-        <td style="text-align:center;">
-          ${item.quantity} × ${discountedPrice.toFixed(2)} LKR
-        </td>
-        <td style="text-align:right;">
-          ${(discountedPrice * item.quantity).toFixed(2)} LKR
-        </td>
-      </tr>
+
+
+
+
+ <tr>
+                   <td colspan="4"  ">
+
+
+      <b>${item.name}</b><br>
+          <small style="font-size: 12x; font-weight:600;">Selling Price: ${originalPrice.toFixed(2)}  </small>
+     ${
+  item.discount > 0
+    ? `<small
+        style="
+          background-color: #000;
+          color: #fff;
+          font-size: 9px;
+          font-weight: 600;
+          padding: 2px 6px;
+          border-radius: 4px;
+          margin: 0 8px;
+        "
+      >
+        ${
+          item.discount_type === 'percent'
+            ? item.discount + '% off'
+            : item.discount.toFixed(2) + ' LKR off'
+        }
+      </small>`
+    : ''
+}
+
+
+
+                       </td>
+               </tr>
+               <tr style="border-bottom: 1px dashed #000;  font-size: 14px; font-weight:600;">
+ <td style="text-align: left;"></td>
+
+                   <td style="text-align: center;">     ${item.quantity} × ${discountedPrice.toFixed(2)}</td>
+                   <td style="text-align: right;">    ${(discountedPrice * item.quantity).toFixed(2)}</td>
+               </tr>
+
+
+
+
+
+
+
+
     `;
   }).join('')}
 </tbody>

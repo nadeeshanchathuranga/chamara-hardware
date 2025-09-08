@@ -48,7 +48,7 @@
 .dataTables_wrapper {
   margin-bottom: 10px;
 }
-</style> 
+</style>
 
 <template>
     <Head title="Order History" />
@@ -60,7 +60,7 @@
                 <p class="text-3xl italic font-bold text-black">
                 <span class="px-4 py-1 mr-3 text-white bg-black rounded-xl">{{
                     totalhistoryTransactions
-                   
+
                 }}</span>
                 <span class="text-xl">/ Total History Transition</span>
                 </p>
@@ -107,7 +107,7 @@
                             <td class="p-4 font-bold border-gray-200">{{ history.payment_method || "N/A" }}</td>
                             <td class="p-4 font-bold border-gray-200">{{ history.sale_date || "N/A" }}</td>
                             <td class="p-4 font-bold border-gray-200">
-                                <button 
+                                <button
                                     @click="printReceipt(history)"
                                     class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 mr-4"
                                 >
@@ -117,7 +117,7 @@
                                     Delete
                                 </button>
                             </td>
-                            
+
                         </tr>
                     </tbody>
                 </table>
@@ -205,8 +205,11 @@ const getSafeValue = (obj, path) => {
   const productRows = saleItems.map(item => `
     <tr>
       <td>${getSafeValue(item, 'product.name') || 'N/A'}</td>
-      <td class="text-right">${item.quantity || 0}</td>
-      <td class="text-right">${item.unit_price || 0} </td>
+      <td class="text-right">${item.quantity || 0}
+
+${item.quantity || 0}
+        </td>
+      <td class="text-right">${item.selling_price || 0} </td>
     </tr>
   `).join('');
 
@@ -328,9 +331,9 @@ const getSafeValue = (obj, path) => {
                     <p>Date:</p>
                     <small>
                         ${new Date(history.created_at).toLocaleDateString('en-US', {
-                        dateStyle: 'medium', 
-                        })} 
-                        
+                        dateStyle: 'medium',
+                        })}
+
                     </small>
                 </div>
                 <div>
@@ -355,9 +358,9 @@ const getSafeValue = (obj, path) => {
             <table>
                 <thead>
                     <tr>
-                        <th>Description</th>
-                        <th class="text-right">Qty</th>
-                        <th class="text-right">Price</th>
+                           <th style="text-align:left;">Item</th>
+    <th style="text-align:center;">Qty × Price</th>
+    <th style="text-align:right;">Total</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -365,8 +368,8 @@ const getSafeValue = (obj, path) => {
                 </tbody>
             </table>
         </div>
-        
-        
+
+
         <div class="totals">
             <div>
                 <span>Sub Total</span>
@@ -393,14 +396,14 @@ const getSafeValue = (obj, path) => {
                 <span>${(history.cash - (history.total_amount - (history.discount || 0) -(history.custom_discount || 0))).toFixed(2)} LKR</span>
             </div>
         </div>
-        
+
         <div class="footer">
             <p>THANK YOU COME AGAIN</p>
             <p class="italic">Let the quality define its own standards</p>
             <p style="font-weight: bold;">Powered by JAAN Network (Pvt) Ltd.</p>
             <p>${new Date(history.created_at).toLocaleTimeString('en-US', {
-                        timeStyle: 'long', 
-                        hourCycle: 'h23',   
+                        timeStyle: 'long',
+                        hourCycle: 'h23',
                         })}</p>
         </div>
       </div>

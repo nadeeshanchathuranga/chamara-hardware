@@ -101,11 +101,26 @@
                             class="transition duration-200 ease-in-out hover:bg-gray-200 hover:shadow-lg"
                         >
                             <td class="px-6 py-3 text- first-letter:">{{ index + 1 }}</td>
-                            <td class="p-4 font-bold border-gray-200">{{ history.order_id || "N/A" }}</td>
-                            <td class="p-4 font-bold border-gray-200">{{ history.total_amount - (history.discount || 0) - (history.custom_discount || 0) || "N/A" }}</td>
-                             <td class="p-4 font-bold border-gray-200">{{((parseFloat(history.discount) || 0) + (parseFloat(history.custom_discount) || 0)).toLocaleString()}}</td>
-                            <td class="p-4 font-bold border-gray-200">{{ history.payment_method || "N/A" }}</td>
-                            <td class="p-4 font-bold border-gray-200">{{ history.sale_date || "N/A" }}</td>
+
+<td class="p-4 font-bold border-gray-200">
+  {{ history.order_id || "N/A" }}
+</td>
+
+<td class="p-4 font-bold border-gray-200">
+  {{ ((history.total_amount || 0) - (history.discount || 0) - (history.custom_discount || 0)).toFixed(2) }}
+</td>
+
+<td class="p-4 font-bold border-gray-200">
+  {{ ((parseFloat(history.discount) || 0) + (parseFloat(history.custom_discount) || 0)).toFixed(2) }}
+</td>
+
+<td class="p-4 font-bold border-gray-200">
+  {{ history.payment_method || "N/A" }}
+</td>
+
+<td class="p-4 font-bold border-gray-200">
+  {{ history.sale_date || "N/A" }}
+</td>
                             <td class="p-4 font-bold border-gray-200">
                                 <button
                                     @click="printReceipt(history)"
@@ -200,18 +215,81 @@ const getSafeValue = (obj, path) => {
     return path.split('.').reduce((acc, part) => (acc && acc[part] ? acc[part] : ''), obj);
   };
 
-  // Get product details from sale items
-  const saleItems = history.sale_items || [];
-  const productRows = saleItems.map(item => `
-    <tr>
-      <td>${getSafeValue(item, 'product.name') || 'N/A'}</td>
-      <td class="text-right">${item.quantity || 0}
 
-${item.quantity || 0}
-        </td>
-      <td class="text-right">${item.selling_price || 0} </td>
+
+
+const saleItems = Array.isArray(history.sale_items) ? history.sale_items : [];
+
+const productRows = saleItems.map((item) => {
+  const name = item?.name || item?.product?.name || "Item";
+  const qty = Number(item?.quantity) || 0;
+
+  // Base/original price (fallbacks supported)
+  const originalPrice = Number(
+    item?.unit_price ?? item?.selling_price ?? item?.originalPrice
+  ) || 0;
+
+  // Determine discounted price
+  const hasDiscount = !!item?.apply_discount && Number(item?.discount) > 0;
+  let discountedPrice = originalPrice;
+
+  if (hasDiscount) {
+    if (item?.discounted_price != null) {
+      discountedPrice = Number(item.discounted_price) || originalPrice;
+    } else if (item?.discount_type === "percent") {
+      discountedPrice = originalPrice * (1 - (Number(item.discount) || 0) / 100);
+    } else {
+      // fixed amount off
+      discountedPrice = originalPrice - (Number(item.discount) || 0);
+    }
+    if (discountedPrice < 0) discountedPrice = 0;
+  }
+
+  const discountBadge = hasDiscount
+    ? (item?.discount_type === "percent"
+        ? `${Number(item.discount)}% off`
+        : `${(Number(item.discount) || 0).toFixed(2)} LKR off`)
+    : "";
+
+  return `
+    <tr>
+      <td colspan="3">
+        <b>${name}</b><br>
+        <small style="font-size: 12px; font-weight:600;">
+          Selling Price: ${originalPrice.toFixed(2)}
+        </small>
+        ${
+          hasDiscount
+            ? `<small
+                 style="
+                   background-color:#000;
+                   color:#fff;
+                   font-size:9px;
+                   font-weight:600;
+                   padding:2px 6px;
+                   border-radius:4px;
+                   margin:0 8px;
+                 "
+               >${discountBadge}</small>`
+            : ""
+        }
+      </td>
     </tr>
-  `).join('');
+    <tr style="border-bottom:1px dashed #000; font-size:14px; font-weight:600;">
+      <td style="text-align:left;"></td>
+      <td style="text-align:center;">${qty} × ${discountedPrice.toFixed(2)}</td>
+      <td style="text-align:right;">${(discountedPrice * qty).toFixed(2)}</td>
+    </tr>
+  `;
+}).join("");
+
+
+
+
+
+
+
+
 
   const receiptContent = `
   <!DOCTYPE html>
@@ -358,9 +436,9 @@ ${item.quantity || 0}
             <table>
                 <thead>
                     <tr>
-                           <th style="text-align:left;">Item</th>
-    <th style="text-align:center;">Qty × Price</th>
-    <th style="text-align:right;">Total</th>
+           <th style="text-align:left;">Item</th>
+       <th style="text-align:center;">Qty × Price</th>
+       <th style="text-align:right;">Total</th>
                     </tr>
                 </thead>
                 <tbody>

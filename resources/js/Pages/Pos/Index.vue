@@ -156,6 +156,11 @@
     <span class="font-bold">{{ item.selling_price }}</span>
 </p>
 
+<p class="text-xl text-black">
+    <span class="font-semibold">Cost Price:</span>
+    <span class="font-bold">{{ item.cost_price }}</span>
+</p>
+
 
                                 <div class="flex items-center justify-between w-full">
                                     <div class="flex space-x-4">

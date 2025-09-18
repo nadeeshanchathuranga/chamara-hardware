@@ -94,7 +94,7 @@
             v-model="search"
             @input="performSearch"
             type="text"
-            placeholder="Search ..."
+              placeholder="Search by product name or code..."
             class="w-full custom-input"
           />
         </div>
@@ -211,11 +211,7 @@
               "
               class="cursor-pointer"
             >
-              <!-- <img
-                :src="`/${product.image}`"
-                alt="Product Image"
-                class="object-cover w-full h-64"
-              /> -->
+
 
               <img
                 :src="

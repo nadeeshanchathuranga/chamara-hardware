@@ -81,78 +81,83 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
-    {
-        $query = $request->input('search');
-        $sortOrder = $request->input('sort');
-        $selectedColor = $request->input('color');
-        $selectedSize = $request->input('size');
-        $stockStatus = $request->input('stockStatus');
-        $selectedCategory = $request->input('selectedCategory');
 
+public function index(Request $request)
+{
+    // Normalize inputs
+    $search           = trim((string) $request->input('search', ''));
+    $sortOrder        = $request->input('sort');             // 'asc' | 'desc' | null
+    $selectedColor    = $request->input('color');            // color name
+    $selectedSize     = $request->input('size');             // size name
+    $stockStatus      = $request->input('stockStatus');      // 'in' | 'out' | ''
+    $selectedCategory = $request->input('selectedCategory'); // category id
 
-        $productsQuery = Product::with('category', 'color', 'size', 'supplier')
-            ->when($query, function ($queryBuilder) use ($query) {
-                $queryBuilder->where(function ($subQuery) use ($query) {
-                    $subQuery->where('name', 'like', "%{$query}%")
-                        ->orWhere('code', 'like', "%{$query}%");
-                });
-            })
-            ->when($selectedColor, function ($queryBuilder) use ($selectedColor) {
-                $queryBuilder->whereHas('color', function ($colorQuery) use ($selectedColor) {
-                    $colorQuery->where('name', $selectedColor);
-                });
-            })
-            ->when($selectedSize, function ($queryBuilder) use ($selectedSize) {
-                $queryBuilder->whereHas('size', function ($sizeQuery) use ($selectedSize) {
-                    $sizeQuery->where('name', $selectedSize);
-                });
-            })
-            ->when(in_array($sortOrder, ['asc', 'desc']), function ($queryBuilder) use ($sortOrder) {
-                $queryBuilder->orderBy('selling_price', $sortOrder);
-            })
-            ->when($stockStatus, function ($queryBuilder) use ($stockStatus) {
-                if ($stockStatus === 'in') {
-                    $queryBuilder->where('stock_quantity', '>', 0); // In Stock
-                } elseif ($stockStatus === 'out') {
-                    $queryBuilder->where('stock_quantity', '<=', 0); // Out of Stock
-                }
-            })
-            ->when($selectedCategory, function ($queryBuilder) use ($selectedCategory) {
-                $queryBuilder->where('category_id', $selectedCategory); // Filter by category
+    $productsQuery = Product::query()
+        ->with(['category', 'color', 'size', 'supplier'])
+        // SEARCH: name OR code (and barcode if you want)
+        ->search($search)
+        // CATEGORY filter
+        ->when($selectedCategory, function ($q) use ($selectedCategory) {
+            $q->where('category_id', $selectedCategory);
+        })
+        // STOCK filter
+        ->when($stockStatus === 'in', function ($q) {
+            $q->where('stock_quantity', '>', 0);
+        })
+        ->when($stockStatus === 'out', function ($q) {
+            $q->where('stock_quantity', '<=', 0);
+        })
+        // COLOR filter (by related color name)
+        ->when($selectedColor, function ($q) use ($selectedColor) {
+            $q->whereHas('color', function ($c) use ($selectedColor) {
+                $c->where('name', $selectedColor);
             });
-
-
-        $count = $productsQuery->count();
-
-        $products = $productsQuery->orderBy('created_at', 'desc')->paginate(8);
-
-
-        // $allcategories = Category::with('parent')->get();
-        $allcategories = Category::with('parent')->get()->map(function ($category) {
-            $category->hierarchy_string = $category->hierarchy_string; // Access it
-            return $category;
+        })
+        // SIZE filter (by related size name)
+        ->when($selectedSize, function ($q) use ($selectedSize) {
+            $q->whereHas('size', function ($s) use ($selectedSize) {
+                $s->where('name', $selectedSize);
+            });
         });
-        $colors = Color::orderBy('created_at', 'desc')->get();
-        $sizes = Size::orderBy('created_at', 'desc')->get();
-        $suppliers = Supplier::orderBy('created_at', 'desc')->get();
 
+    // Count BEFORE pagination
+    $count = (clone $productsQuery)->count();
 
-        return Inertia::render('Products/Index', [
-            'products' => $products,
-            'allcategories' => $allcategories,
-            'colors' => $colors,
-            'sizes' => $sizes,
-            'suppliers' => $suppliers,
-            'totalProducts' => $count,
-            'search' => $query,
-            'sort' => $sortOrder,
-            'color' => $selectedColor,
-            'size' => $selectedSize,
-            'stockStatus' => $stockStatus,
-            'selectedCategory' => $selectedCategory
-        ]);
+    // Sorting (price asc/desc); default newest first
+    if (in_array($sortOrder, ['asc', 'desc'], true)) {
+        $productsQuery->orderBy('selling_price', $sortOrder);
+    } else {
+        $productsQuery->latest('created_at');
     }
+
+    $products = $productsQuery->paginate(8)->withQueryString();
+
+    // Categories with hierarchy_string already computed on model
+    $allcategories = Category::with('parent')->get()->map(function ($category) {
+        $category->hierarchy_string = $category->hierarchy_string; // touch accessor
+        return $category;
+    });
+
+    $colors    = Color::orderByDesc('created_at')->get();
+    $sizes     = Size::orderByDesc('created_at')->get();
+    $suppliers = Supplier::orderByDesc('created_at')->get();
+
+    return Inertia::render('Products/Index', [
+        'products'         => $products,
+        'allcategories'    => $allcategories,
+        'colors'           => $colors,
+        'sizes'            => $sizes,
+        'suppliers'        => $suppliers,
+        'totalProducts'    => $count,
+        'search'           => $search,
+        'sort'             => $sortOrder,
+        'color'            => $selectedColor,
+        'size'             => $selectedSize,
+        'stockStatus'      => $stockStatus,
+        'selectedCategory' => $selectedCategory,
+    ]);
+}
+
 
 
     /**
@@ -307,7 +312,7 @@ class ProductController extends Controller
             }
 
             $product = Product::create($validated);
-            
+
 
             // Add stock transaction if stock quantity is provided
             $stockQuantity = $validated['stock_quantity'] ?? 0; // Default to 0 if not provided

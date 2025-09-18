@@ -82,81 +82,81 @@ class ProductController extends Controller
      * Display a listing of the resource.
      */
 
-public function index(Request $request)
-{
-    // Normalize inputs
-    $search           = trim((string) $request->input('search', ''));
-    $sortOrder        = $request->input('sort');             // 'asc' | 'desc' | null
-    $selectedColor    = $request->input('color');            // color name
-    $selectedSize     = $request->input('size');             // size name
-    $stockStatus      = $request->input('stockStatus');      // 'in' | 'out' | ''
-    $selectedCategory = $request->input('selectedCategory'); // category id
+   public function index(Request $request)
+    {
+        // Inputs
+        $search           = trim((string) $request->input('search', ''));
+        $sortOrder        = $request->input('sort');             // 'asc' | 'desc'
+        $selectedColor    = $request->input('color');            // color name
+        $selectedSize     = $request->input('size');             // size name
+        $stockStatus      = $request->input('stockStatus');      // 'in' | 'out'
+        $selectedCategory = $request->input('selectedCategory'); // category id
 
-    $productsQuery = Product::query()
-        ->with(['category', 'color', 'size', 'supplier'])
-        // SEARCH: name OR code (and barcode if you want)
-        ->search($search)
-        // CATEGORY filter
-        ->when($selectedCategory, function ($q) use ($selectedCategory) {
-            $q->where('category_id', $selectedCategory);
-        })
-        // STOCK filter
-        ->when($stockStatus === 'in', function ($q) {
-            $q->where('stock_quantity', '>', 0);
-        })
-        ->when($stockStatus === 'out', function ($q) {
-            $q->where('stock_quantity', '<=', 0);
-        })
-        // COLOR filter (by related color name)
-        ->when($selectedColor, function ($q) use ($selectedColor) {
-            $q->whereHas('color', function ($c) use ($selectedColor) {
-                $c->where('name', $selectedColor);
+        $productsQuery = Product::query()
+            ->with(['category', 'color', 'size', 'supplier'])
+            // 🔍 Search only by product code
+            ->search($search)
+            // Category filter
+            ->when($selectedCategory, function ($q) use ($selectedCategory) {
+                $q->where('category_id', $selectedCategory);
+            })
+            // Stock filter
+            ->when($stockStatus === 'in', function ($q) {
+                $q->where('stock_quantity', '>', 0);
+            })
+            ->when($stockStatus === 'out', function ($q) {
+                $q->where('stock_quantity', '<=', 0);
+            })
+            // Color filter
+            ->when($selectedColor, function ($q) use ($selectedColor) {
+                $q->whereHas('color', function ($c) use ($selectedColor) {
+                    $c->where('name', $selectedColor);
+                });
+            })
+            // Size filter
+            ->when($selectedSize, function ($q) use ($selectedSize) {
+                $q->whereHas('size', function ($s) use ($selectedSize) {
+                    $s->where('name', $selectedSize);
+                });
             });
-        })
-        // SIZE filter (by related size name)
-        ->when($selectedSize, function ($q) use ($selectedSize) {
-            $q->whereHas('size', function ($s) use ($selectedSize) {
-                $s->where('name', $selectedSize);
-            });
+
+        // Count BEFORE pagination
+        $count = (clone $productsQuery)->count();
+
+        // Sorting
+        if (in_array($sortOrder, ['asc', 'desc'], true)) {
+            $productsQuery->orderBy('selling_price', $sortOrder);
+        } else {
+            $productsQuery->latest('created_at');
+        }
+
+        $products = $productsQuery->paginate(8)->withQueryString();
+
+        // Load filters
+        $allcategories = Category::with('parent')->get()->map(function ($category) {
+            $category->hierarchy_string = $category->hierarchy_string;
+            return $category;
         });
 
-    // Count BEFORE pagination
-    $count = (clone $productsQuery)->count();
+        $colors    = Color::orderByDesc('created_at')->get();
+        $sizes     = Size::orderByDesc('created_at')->get();
+        $suppliers = Supplier::orderByDesc('created_at')->get();
 
-    // Sorting (price asc/desc); default newest first
-    if (in_array($sortOrder, ['asc', 'desc'], true)) {
-        $productsQuery->orderBy('selling_price', $sortOrder);
-    } else {
-        $productsQuery->latest('created_at');
+        return Inertia::render('Products/Index', [
+            'products'         => $products,
+            'allcategories'    => $allcategories,
+            'colors'           => $colors,
+            'sizes'            => $sizes,
+            'suppliers'        => $suppliers,
+            'totalProducts'    => $count,
+            'search'           => $search,
+            'sort'             => $sortOrder,
+            'color'            => $selectedColor,
+            'size'             => $selectedSize,
+            'stockStatus'      => $stockStatus,
+            'selectedCategory' => $selectedCategory,
+        ]);
     }
-
-    $products = $productsQuery->paginate(8)->withQueryString();
-
-    // Categories with hierarchy_string already computed on model
-    $allcategories = Category::with('parent')->get()->map(function ($category) {
-        $category->hierarchy_string = $category->hierarchy_string; // touch accessor
-        return $category;
-    });
-
-    $colors    = Color::orderByDesc('created_at')->get();
-    $sizes     = Size::orderByDesc('created_at')->get();
-    $suppliers = Supplier::orderByDesc('created_at')->get();
-
-    return Inertia::render('Products/Index', [
-        'products'         => $products,
-        'allcategories'    => $allcategories,
-        'colors'           => $colors,
-        'sizes'            => $sizes,
-        'suppliers'        => $suppliers,
-        'totalProducts'    => $count,
-        'search'           => $search,
-        'sort'             => $sortOrder,
-        'color'            => $selectedColor,
-        'size'             => $selectedSize,
-        'stockStatus'      => $stockStatus,
-        'selectedCategory' => $selectedCategory,
-    ]);
-}
 
 
 

@@ -71,18 +71,13 @@ class Product extends Model
 
 
 
-       public function scopeSearch($query, ?string $term)
+  public function scopeSearch($query, ?string $term)
     {
         $term = trim((string) $term);
         if ($term === '') return $query;
 
-        return $query->where(function ($q) use ($term) {
-            $q->where('name', 'like', "%{$term}%")
-              ->orWhere('code', 'like', "%{$term}%");
-              // ->orWhere('barcode', 'like', "%{$term}%"); // <- optional
-        });
+        return $query->where('code', 'like', "%{$term}%");
     }
 
 
-    
 }

@@ -97,6 +97,68 @@
 .dataTables_wrapper {
   margin-bottom: 10px;
 }
+
+/* Hide scrollbars completely */
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* WebKit browsers */
+}
+
+/* Responsive table that fits all screen sizes */
+.responsive-table {
+  table-layout: fixed; /* Use fixed layout for better control */
+  width: 100%;
+}
+
+.responsive-table th,
+.responsive-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0.5rem 0.25rem; /* Compact padding */
+  font-size: 0.75rem; /* Smaller text for better fit */
+  line-height: 1.2;
+}
+
+/* Paint Orders table specific column widths */
+.responsive-table th:nth-child(1),
+.responsive-table td:nth-child(1) { width: 4%; } /* # */
+
+.responsive-table th:nth-child(2),
+.responsive-table td:nth-child(2) { width: 8%; } /* Order ID */
+
+.responsive-table th:nth-child(3),
+.responsive-table td:nth-child(3) { width: 12%; } /* Customer */
+
+.responsive-table th:nth-child(4),
+.responsive-table td:nth-child(4) { width: 12%; } /* Paint Product */
+
+.responsive-table th:nth-child(5),
+.responsive-table td:nth-child(5) { width: 12%; } /* Color Card */
+
+.responsive-table th:nth-child(6),
+.responsive-table td:nth-child(6) { width: 8%; } /* Can Size */
+
+.responsive-table th:nth-child(7),
+.responsive-table td:nth-child(7) { width: 6%; } /* Quantity */
+
+.responsive-table th:nth-child(8),
+.responsive-table td:nth-child(8) { width: 10%; } /* Unit Cost */
+
+.responsive-table th:nth-child(9),
+.responsive-table td:nth-child(9) { width: 10%; } /* Selling Price */
+
+.responsive-table th:nth-child(10),
+.responsive-table td:nth-child(10) { width: 10%; } /* Total Amount */
+
+.responsive-table th:nth-child(11),
+.responsive-table td:nth-child(11) { width: 8%; } /* Profit */
+
+.responsive-table th:nth-child(12),
+.responsive-table td:nth-child(12) { width: 10%; } /* Sale Date */
 </style>
 
 
@@ -187,7 +249,7 @@
           </h2>
         </div>
         <div class="flex flex-col items-center justify-center">
-          <p class="text-2xl font-bold text-black">{{ totalSaleAmount }} LKR</p>
+          <p class="text-2xl font-bold text-black">{{ (totalSaleAmount + (paintOrderSummary.total_amount || 0)).toLocaleString() }} LKR</p>
         </div>
       </div>
       <!-- Net Profit -->
@@ -200,7 +262,7 @@
           </h2>
         </div>
         <div class="flex flex-col items-center justify-center">
-          <p class="text-2xl font-bold text-black">{{ netProfit }} LKR</p>
+          <p class="text-2xl font-bold text-black">{{ (netProfit + (paintOrderSummary.total_profit || 0)).toLocaleString() }} LKR</p>
         </div>
       </div>
       <!-- Total Products -->
@@ -229,7 +291,7 @@
         </div>
         <div class="flex flex-col items-center justify-center">
           <p class="text-2xl font-bold text-black">
-            {{ averageTransactionValue }} LKR
+            {{ (totalTransactions + (paintOrderSummary.total_orders || 0)) > 0 ? Math.round((totalSaleAmount + (paintOrderSummary.total_amount || 0)) / (totalTransactions + (paintOrderSummary.total_orders || 0))) : 0 }} LKR
           </p>
         </div>
       </div>
@@ -243,7 +305,7 @@
           </h2>
         </div>
         <div class="flex flex-col items-center justify-center">
-          <p class="text-2xl font-bold text-black">{{ totalTransactions }}</p>
+          <p class="text-2xl font-bold text-black">{{ (totalTransactions + (paintOrderSummary.total_orders || 0)).toLocaleString() }}</p>
         </div>
       </div>
       <!-- Total Customers -->
@@ -257,6 +319,67 @@
         </div>
         <div class="flex flex-col items-center justify-center">
           <p class="text-2xl font-bold text-black">{{ totalCustomer }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paint Orders Statistics Section -->
+    <div class="grid w-full md:grid-cols-4 grid-cols-2 gap-4">
+      <!-- Total Paint Orders -->
+      <div
+        class="py-6 flex flex-col justify-center items-center border-2 border-[#059669] w-full space-y-4 rounded-2xl bg-[#059669] shadow-lg transform transition-transform duration-300 hover:-translate-y-4"
+      >
+        <div class="flex flex-col items-center text-center justify-center">
+          <h2 class="text-lg font-extrabold tracking-wide text-white uppercase">
+            Paint Orders
+          </h2>
+        </div>
+        <div class="flex flex-col items-center justify-center">
+          <p class="text-2xl font-bold text-white">{{ paintOrderSummary.total_orders || 0 }}</p>
+        </div>
+      </div>
+
+      <!-- Paint Orders Revenue -->
+      <div
+        class="py-6 flex flex-col justify-center items-center border-2 border-[#0891b2] w-full space-y-4 rounded-2xl bg-[#0891b2] shadow-lg transform transition-transform duration-300 hover:-translate-y-4"
+      >
+        <div class="flex flex-col items-center text-center justify-center">
+          <h2 class="text-lg font-extrabold tracking-wide text-white uppercase">
+            Paint Orders Revenue
+          </h2>
+        </div>
+        <div class="flex flex-col items-center justify-center">
+          <p class="text-2xl font-bold text-white">{{ (paintOrderSummary.total_amount || 0).toLocaleString() }} LKR</p>
+        </div>
+      </div>
+
+      <!-- Paint Orders Profit -->
+      <div
+        class="py-6 flex flex-col justify-center items-center border-2 border-[#dc2626] w-full space-y-4 rounded-2xl bg-[#dc2626] shadow-lg transform transition-transform duration-300 hover:-translate-y-4"
+      >
+        <div class="flex flex-col items-center text-center justify-center">
+          <h2 class="text-lg font-extrabold tracking-wide text-white uppercase">
+            Paint Orders Profit
+          </h2>
+        </div>
+        <div class="flex flex-col items-center justify-center">
+          <p class="text-2xl font-bold text-white">{{ (paintOrderSummary.total_profit || 0).toLocaleString() }} LKR</p>
+        </div>
+      </div>
+
+      <!-- Average Paint Order Value -->
+      <div
+        class="py-6 flex flex-col justify-center items-center border-2 border-[#7c3aed] w-full space-y-4 rounded-2xl bg-[#7c3aed] shadow-lg transform transition-transform duration-300 hover:-translate-y-4"
+      >
+        <div class="flex flex-col items-center text-center justify-center">
+          <h2 class="text-lg font-extrabold tracking-wide text-white uppercase">
+            Avg. Paint Order Value
+          </h2>
+        </div>
+        <div class="flex flex-col items-center justify-center">
+          <p class="text-2xl font-bold text-white">
+            {{ paintOrderSummary.total_orders > 0 ? ((paintOrderSummary.total_amount || 0) / paintOrderSummary.total_orders).toFixed(0) : 0 }} LKR
+          </p>
         </div>
       </div>
     </div>
@@ -476,11 +599,12 @@
   </div>
 
 
-  <div class="overflow-x-auto max-h-[400px] border rounded-xl mt-4">
-    <table
-      id="stockQtyTbl"
-      class="w-full text-gray-800 bg-white border border-gray-300 rounded-lg shadow-md table-auto"
-    >
+  <div class="bg-white rounded-2xl shadow overflow-hidden">
+    <div class="no-scrollbar overflow-x-auto">
+      <table
+        id="stockQtyTbl"
+        class="w-full table-auto responsive-table text-gray-800 bg-white"
+      >
       <thead>
         <tr class="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 text-white text-[14px] border-b border-blue-800">
           <th class="p-3 text-left font-semibold">#</th>
@@ -528,12 +652,9 @@
         </tr>
       </tbody>
     </table>
+    </div>
   </div>
 </div>
-
-
-
-
 
     </div>
   <div class="flex md:flex-row flex-col items-center justify-center w-full h-full md:space-x-4 md:space-y-0 space-y-4 ">
@@ -571,11 +692,12 @@
       </span> </h2>
     </div>
   </div>
-  <div class="overflow-x-auto max-h-[400px] border rounded-xl mt-4">
-    <table
-      id="salesTbl"
-      class="w-full text-gray-800 bg-white border border-gray-300 rounded-lg shadow-md table-auto"
-    >
+  <div class="bg-white rounded-2xl shadow overflow-hidden">
+    <div class="no-scrollbar overflow-x-auto">
+      <table
+        id="salesTbl"
+        class="w-full table-auto responsive-table text-gray-800 bg-white"
+      >
       <thead>
         <tr class="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 text-white text-[14px] border-b border-blue-800">
           <th class="p-3 text-left font-semibold">#</th>
@@ -612,6 +734,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
   </div>
 </div>
 </div>
@@ -651,11 +774,12 @@
       </span> </h2>
     </div> -->
   </div>
-  <div class="overflow-x-auto max-h-[400px] border rounded-xl mt-4">
-    <table
-      id="MonthlySalesTbl"
-      class="w-full text-gray-800 bg-white border border-gray-300 rounded-lg shadow-md table-auto"
-    >
+  <div class="bg-white rounded-2xl shadow overflow-hidden">
+    <div class="no-scrollbar overflow-x-auto">
+      <table
+        id="MonthlySalesTbl"
+        class="w-full table-auto responsive-table text-gray-800 bg-white"
+      >
       <thead>
         <tr class="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 text-white text-[14px] border-b border-blue-800">
           <th class="p-3 text-left font-semibold">#</th>
@@ -683,6 +807,7 @@
         </tr>
       </tbody>
     </table>
+    </div>
   </div>
 </div>
 </div>
@@ -721,11 +846,12 @@
       </span> </h2>
     </div> -->
   </div>
-  <div class="overflow-x-auto max-h-[400px] border rounded-xl mt-4">
-    <table
-      id="StockTransactionTbl"
-      class="w-full text-gray-800 bg-white border border-gray-300 rounded-lg shadow-md table-auto"
-    >
+  <div class="bg-white rounded-2xl shadow overflow-hidden">
+    <div class="no-scrollbar overflow-x-auto">
+      <table
+        id="StockTransactionTbl"
+        class="w-full table-auto responsive-table text-gray-800 bg-white"
+      >
       <thead>
         <tr class="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 text-white text-[14px] border-b border-blue-800">
           <th class="p-3 text-left font-semibold">#</th>
@@ -754,11 +880,109 @@
         </tr>
       </tbody>
     </table>
+    </div>
   </div>
 </div>
 </div>
-</div>
 
+<!-- Paint Orders Table -->
+<div class="flex md:flex-row flex-col items-center justify-center w-full h-full md:space-x-4 md:space-y-0 space-y-4">
+  <div class="w-full bg-white border-4 border-black rounded-xl p-6">
+    <h2 class="text-2xl font-semibold text-slate-700 text-center pb-4">
+      Paint Orders Sales Table
+    </h2>
+
+    <!-- Buttons and Summary in a Single Row -->
+    <div class="flex justify-between items-center pb-4">
+      <!-- Left: Buttons -->
+      <div class="flex gap-4">
+        <button
+          @click="downloadPaintOrdersPDF"
+          class="px-4 py-2 text-md font-semibold text-white bg-orange-600 rounded-lg hover:bg-orange-700 shadow-md"
+        >
+          Download PDF
+        </button>
+      </div>
+
+      <!-- Right: Summary Stats -->
+      <div class="grid grid-cols-2 gap-4 text-center">
+        <div class="py-2 px-4 border-2 border-green-600 rounded-xl bg-green-400 shadow-lg">
+          <h3 class="text-sm font-bold text-black uppercase">Total Orders</h3>
+          <span class="text-lg font-bold text-black">{{ paintOrderSummary.total_orders }}</span>
+        </div>
+        <div class="py-2 px-4 border-2 border-blue-600 rounded-xl bg-blue-400 shadow-lg">
+          <h3 class="text-sm font-bold text-black uppercase">Total Amount</h3>
+          <span class="text-lg font-bold text-black">{{ paintOrderSummary.total_amount.toLocaleString() }} LKR</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow overflow-hidden">
+      <div class="no-scrollbar overflow-x-auto">
+        <table
+          id="paintOrdersTbl"
+          class="w-full table-auto responsive-table text-gray-800 bg-white"
+        >
+          <thead>
+            <tr class="bg-gradient-to-r from-blue-600 to-blue-700 text-white uppercase tracking-wide">
+              <th class="px-2 py-4 text-left text-xs font-semibold">#</th>
+              <th class="px-2 py-4 text-left text-xs font-semibold">Order ID</th>
+              <th class="px-2 py-4 text-left text-xs font-semibold">Customer</th>
+              <th class="px-2 py-4 text-left text-xs font-semibold">Paint Product</th>
+              <th class="px-2 py-4 text-left text-xs font-semibold">Color Card</th>
+              <th class="px-2 py-4 text-left text-xs font-semibold">Can Size</th>
+              <th class="px-2 py-4 text-left text-xs font-semibold">Quantity</th>
+              <th class="px-2 py-4 text-left text-xs font-semibold">Unit Cost</th>
+              <th class="px-2 py-4 text-left text-xs font-semibold">Selling Price</th>
+              <th class="px-2 py-4 text-left text-xs font-semibold">Total Amount</th>
+              <th class="px-2 py-4 text-left text-xs font-semibold">Profit</th>
+              <th class="px-2 py-4 text-left text-xs font-semibold">Sale Date</th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-gray-200">
+            <tr
+              v-for="(order, index) in paintOrderDetails"
+              :key="index"
+              class="bg-white hover:bg-gray-50"
+            >
+              <td class="px-2 py-3 text-xs">{{ index + 1 }}</td>
+              <td class="px-2 py-3 text-xs font-medium">#{{ order.order_id }}</td>
+              <td class="px-2 py-3 text-xs">
+                <div class="truncate" :title="order.customer_name">
+                  {{ order.customer_name || 'N/A' }}
+                </div>
+              </td>
+              <td class="px-2 py-3 text-xs">
+                <div class="truncate" :title="order.paint_product">
+                  {{ order.paint_product || 'N/A' }}
+                </div>
+              </td>
+              <td class="px-2 py-3 text-xs">
+                <div class="truncate" :title="order.color_card">
+                  {{ order.color_card || 'N/A' }}
+                </div>
+              </td>
+              <td class="px-2 py-3 text-xs font-medium">{{ order.can_size }}</td>
+              <td class="px-2 py-3 text-xs">{{ order.quantity }}</td>
+              <td class="px-2 py-3 text-xs">{{ Number(order.unit_cost).toFixed(2) }}</td>
+              <td class="px-2 py-3 text-xs">{{ Number(order.selling_price).toFixed(2) }}</td>
+              <td class="px-2 py-3 text-xs font-medium">{{ Number(order.total_amount).toFixed(2) }}</td>
+              <td class="px-2 py-3 text-xs font-medium" :class="order.profit > 0 ? 'text-green-600' : 'text-red-600'">
+                {{ Number(order.profit).toFixed(2) }}
+              </td>
+              <td class="px-2 py-3 text-xs">{{ order.sale_date }}</td>
+            </tr>
+            <tr v-if="!paintOrderDetails.length">
+              <td colspan="12" class="px-4 py-6 text-center text-gray-500 text-sm">No paint order sales yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
 
 <!-- Batch Management -->
 
@@ -821,6 +1045,8 @@ const props = defineProps({
   employeeSalesSummary: { type: Object, required: true },
   monthlySalesData: { type: Array, default: () => [] },
   stockTransactionsReturn: { type: Array, default: () => [] },
+  paintOrderSummary: { type: Object, default: () => ({ total_orders: 0, total_amount: 0, total_profit: 0, total_cost: 0 }) },
+  paintOrderDetails: { type: Array, default: () => [] },
 });
 
 const totalPrice = computed(() => {
@@ -863,6 +1089,8 @@ const endDate = ref(props.endDate);
 const products = ref(props.products);
 const monthlySalesData = ref(props.monthlySalesData);
 const stockTransactionsReturn = ref(props.stockTransactionsReturn);
+const paintOrderSummary = ref(props.paintOrderSummary);
+const paintOrderDetails = ref(props.paintOrderDetails);
 const sales = ref(props.sales);
 const totalQty = computed(() => {
   return products.value.reduce(
@@ -1096,6 +1324,81 @@ const downloadPDFTableReturn = () => {
 
   // Save the PDF
   doc.save("Return Items.pdf");
+};
+
+const downloadPaintOrdersPDF = () => {
+  const doc = new jsPDF("p", "mm", "a4"); // Portrait, A4 size
+
+  // Title for the PDF
+  doc.setFontSize(18);
+  doc.text("Paint Orders Sales Report", 14, 15);
+
+  // Prepare table headers
+  const tableColumn = [
+    "#",
+    "Order ID",
+    "Customer",
+    "Paint Product",
+    "Color Card",
+    "Can Size",
+    "Qty",
+    "Unit Cost",
+    "Selling Price",
+    "Total Amount",
+    "Profit",
+    "Sale Date"
+  ];
+
+  // Prepare table data
+  const tableRows = paintOrderDetails.value.map((order, index) => [
+    index + 1,
+    `PO-${order.order_id}`,
+    order.customer_name || "N/A",
+    order.paint_product || "N/A",
+    order.color_card || "N/A",
+    order.can_size || "N/A",
+    order.quantity || 0,
+    Number(order.unit_cost || 0).toFixed(2),
+    Number(order.selling_price || 0).toFixed(2),
+    Number(order.total_amount || 0).toFixed(2),
+    Number(order.profit || 0).toFixed(2),
+    order.sale_date || "N/A"
+  ]);
+
+  // Calculate total sums
+  const totalAmount = paintOrderDetails.value.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0);
+  const totalProfit = paintOrderDetails.value.reduce((sum, order) => sum + (Number(order.profit) || 0), 0);
+
+  // Add summary rows
+  tableRows.push(["", "", "", "", "", "", "", "", "Total:", totalAmount.toFixed(2), totalProfit.toFixed(2), ""]);
+
+  // Generate the table
+  doc.autoTable({
+    head: [tableColumn],
+    body: tableRows,
+    startY: 25,
+    theme: "striped",
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [44, 62, 80] },
+    columnStyles: {
+      0: { cellWidth: 12 },   // #
+      1: { cellWidth: 18 },   // Order ID
+      2: { cellWidth: 20 },   // Customer
+      3: { cellWidth: 20 },   // Paint Product
+      4: { cellWidth: 18 },   // Color Card
+      5: { cellWidth: 15 },   // Can Size
+      6: { cellWidth: 12 },   // Qty
+      7: { cellWidth: 18 },   // Unit Cost
+      8: { cellWidth: 18 },   // Selling Price
+      9: { cellWidth: 20 },   // Total Amount
+      10: { cellWidth: 15 },  // Profit
+      11: { cellWidth: 18 },  // Sale Date
+    },
+    margin: { left: 5, right: 5, top: 20 },
+  });
+
+  // Save the PDF
+  doc.save("Paint_Orders_Sales_Report.pdf");
 };
 
 

@@ -12,6 +12,14 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ColorController;
 use App\Http\Controllers\CouponController;
 use App\Http\Controllers\SizeController;
+use App\Http\Controllers\PaintController;
+use App\Http\Controllers\BaseTypeController;
+use App\Http\Controllers\ColorCardController;
+use App\Http\Controllers\PaintProductController;
+use App\Http\Controllers\ColoranceStockController;
+use App\Http\Controllers\MachineRefillController;
+use App\Http\Controllers\PaintOrderController;
+
 
 use App\Http\Controllers\QuotationController;
 
@@ -92,9 +100,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('coupons', CouponController::class);
     Route::resource('sizes', SizeController::class);
     Route::resource('employees', EmployeeController::class);
-    Route::resource('transactionHistory', TransactionHistoryController::class );
+    Route::resource('transactionHistory', TransactionHistoryController::class);
     Route::post('/transactions/delete', [TransactionHistoryController::class, 'destroy'])->name('transactions.delete');
-    Route::resource('stock-transition', StockTransactionController::class); 
+    Route::resource('stock-transition', StockTransactionController::class);
     Route::resource('manualpos', ManualPosController::class);
 
 
@@ -114,10 +122,47 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('return-bill', ReturnItemController::class);
 
 
-    
+
 
     Route::post('/api/products', [ProductController::class, 'fetchProducts']);
     Route::post('/api/sale/items', [ReturnItemController::class, 'fetchSaleItems'])->name('sale.items');
+
+    // Color Bank (view-only)
+    Route::get('/paints', [PaintController::class, 'index'])->name('paints.index');
+
+    // create-only endpoints used by the modal
+    Route::post('/paints/types', [PaintProductController::class, 'store'])->name('paints.types.store');
+    Route::post('/paints/color-cards', [ColorCardController::class, 'store'])->name('paints.color-cards.store');
+    Route::post('/paints/base-types', [BaseTypeController::class, 'store'])->name('paints.base-types.store');
+
+    // Colorance Stock CRUD for the modal
+    Route::get('/paints', [PaintController::class, 'index'])->name('paints.index');
+    Route::post('/paints/colorance-stocks', [ColoranceStockController::class, 'store'])
+        ->name('paints.colorance-stocks.store');
+
+    Route::put('/paints/colorance-stocks/{coloranceStock}', [ColoranceStockController::class, 'update'])
+        ->name('paints.colorance-stocks.update');
+
+    Route::delete('/paints/colorance-stocks/{coloranceStock}', [ColoranceStockController::class, 'destroy'])
+        ->name('paints.colorance-stocks.destroy');
+
+    // Mixing (machine refill)
+    Route::post('/paints/mixing', [MachineRefillController::class, 'store'])
+        ->name('paints.mixing.store');
+
+    Route::get('/paints/orders', [PaintOrderController::class, 'index'])
+        ->name('paints.orders.index');
+
+    Route::get('/paints/orders/create', [PaintOrderController::class, 'create'])
+        ->name('paints.orders.create');
+
+    Route::post('/paints/orders', [PaintOrderController::class, 'store'])
+        ->name('paints.orders.store');
+    // routes/web.php
+    Route::post('/paints/orders/{order}/pay', [PaintOrderController::class, 'pay'])
+        ->name('paints.orders.pay');
+
+
 
 
 });

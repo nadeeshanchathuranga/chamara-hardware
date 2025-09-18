@@ -18,5 +18,10 @@ class Customer extends Model
         'loyalty_points',
     ];
 
+       public function paintOrders()
+    {
+        return $this->hasMany(PaintOrder::class);
+    }
+
 
 }

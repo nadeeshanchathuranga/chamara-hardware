@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
+
+    
     /**
      * Seed the application's database.
      */
@@ -51,8 +53,10 @@ if (!\App\Models\User::where('email', 't1@cashier.com')->exists()) {
 //     ]);
 // }
 
-
-
+        $this->call([
+             ColoranceStockSeeder::class,
+        ]);
+    
 
         // $this->call([
         //     ColorSeeder::class,

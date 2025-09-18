@@ -70,6 +70,26 @@
         </div>
       </Link>
 
+        <Link href="/paints" v-if="HasRole(['Admin', 'Manager'])">
+        <div class="dashboard-card bg-[#c62e51]">
+          <div class="card-content">
+            <div class="icon-container">
+              <img
+                src="/images/dashboard/products.png"
+                class="icon"
+                alt="dresshub.lk"
+              />
+            </div>
+            <div class="text-container">
+              <p class="title">Color Bank</p>
+              <p class="description">
+                Mixing colors and managing color palettes for design projects.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Link>
+
       <Link href="/suppliers" v-if="HasRole(['Admin', 'Manager'])">
         <div class="dashboard-card bg-[#914F1E]">
           <div class="card-content">

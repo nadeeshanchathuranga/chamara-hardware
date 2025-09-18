@@ -15,6 +15,14 @@ class Report extends Model
         'details',
     ];
 
+    // Define the allowed report types
+    public const TYPES = [
+        'Daily Sales',
+        'Inventory', 
+        'Customer',
+        'Paint Orders'
+    ];
+
     // Relationships
     public function user()
     {

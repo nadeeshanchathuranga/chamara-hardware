@@ -261,6 +261,41 @@ class ReportController extends Controller
         $stockTransactionsReturn->whereBetween('transaction_date', [$startDate, $endDate]);
     }
 
+    // =========================
+    // 8. Paint Order Reports
+    // =========================
+    $paintOrderReportsQuery = Report::where('type', 'Paint Orders');
+    
+    if ($startDate && $endDate) {
+        $paintOrderReportsQuery->whereBetween('generated_at', [$startDate, $endDate]);
+    }
+    
+    $paintOrderReports = $paintOrderReportsQuery->orderBy('generated_at', 'desc')->get();
+    
+    // Process paint order data
+    $paintOrderSummary = [
+        'total_orders' => $paintOrderReports->count(),
+        'total_amount' => 0,
+        'total_profit' => 0,
+        'total_cost' => 0,
+    ];
+    
+    $paintOrderDetails = [];
+    
+    foreach ($paintOrderReports as $report) {
+        $details = json_decode($report->details, true);
+        if ($details) {
+            $paintOrderSummary['total_amount'] += $details['total_amount'] ?? 0;
+            $paintOrderSummary['total_profit'] += $details['profit'] ?? 0;
+            $paintOrderSummary['total_cost'] += ($details['unit_cost'] * $details['quantity']) ?? 0;
+            
+            $paintOrderDetails[] = array_merge($details, [
+                'report_id' => $report->id,
+                'generated_at' => $report->generated_at,
+            ]);
+        }
+    }
+
     //  $stockTransactionsReturn = $stockTransactionsReturn->orderBy('transaction_date', 'desc')->get();   
 
     // =========================
@@ -295,6 +330,8 @@ class ReportController extends Controller
         'monthlySalesData' => $monthlySalesData,
         'paymentMethodTotals'=> $paymentMethodTotals,
         'stockTransactionsReturn'=>$stockTransactionsReturn,
+        'paintOrderSummary' => $paintOrderSummary,
+        'paintOrderDetails' => $paintOrderDetails,
     ]);
 }
 

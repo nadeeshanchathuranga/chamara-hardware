@@ -81,83 +81,78 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-
-   public function index(Request $request)
+    public function index(Request $request)
     {
-        // Inputs
-        $search           = trim((string) $request->input('search', ''));
-        $sortOrder        = $request->input('sort');             // 'asc' | 'desc'
-        $selectedColor    = $request->input('color');            // color name
-        $selectedSize     = $request->input('size');             // size name
-        $stockStatus      = $request->input('stockStatus');      // 'in' | 'out'
-        $selectedCategory = $request->input('selectedCategory'); // category id
+        $query = $request->input('search');
+        $sortOrder = $request->input('sort');
+        $selectedColor = $request->input('color');
+        $selectedSize = $request->input('size');
+        $stockStatus = $request->input('stockStatus');
+        $selectedCategory = $request->input('selectedCategory');
 
-        $productsQuery = Product::query()
-            ->with(['category', 'color', 'size', 'supplier'])
-            // 🔍 Search only by product code
-            ->search($search)
-            // Category filter
-            ->when($selectedCategory, function ($q) use ($selectedCategory) {
-                $q->where('category_id', $selectedCategory);
-            })
-            // Stock filter
-            ->when($stockStatus === 'in', function ($q) {
-                $q->where('stock_quantity', '>', 0);
-            })
-            ->when($stockStatus === 'out', function ($q) {
-                $q->where('stock_quantity', '<=', 0);
-            })
-            // Color filter
-            ->when($selectedColor, function ($q) use ($selectedColor) {
-                $q->whereHas('color', function ($c) use ($selectedColor) {
-                    $c->where('name', $selectedColor);
+
+        $productsQuery = Product::with('category', 'color', 'size', 'supplier')
+            ->when($query, function ($queryBuilder) use ($query) {
+                $queryBuilder->where(function ($subQuery) use ($query) {
+                    $subQuery->where('name', 'like', "%{$query}%")
+                        ->orWhere('code', 'like', "%{$query}%");
                 });
             })
-            // Size filter
-            ->when($selectedSize, function ($q) use ($selectedSize) {
-                $q->whereHas('size', function ($s) use ($selectedSize) {
-                    $s->where('name', $selectedSize);
+            ->when($selectedColor, function ($queryBuilder) use ($selectedColor) {
+                $queryBuilder->whereHas('color', function ($colorQuery) use ($selectedColor) {
+                    $colorQuery->where('name', $selectedColor);
                 });
+            })
+            ->when($selectedSize, function ($queryBuilder) use ($selectedSize) {
+                $queryBuilder->whereHas('size', function ($sizeQuery) use ($selectedSize) {
+                    $sizeQuery->where('name', $selectedSize);
+                });
+            })
+            ->when(in_array($sortOrder, ['asc', 'desc']), function ($queryBuilder) use ($sortOrder) {
+                $queryBuilder->orderBy('selling_price', $sortOrder);
+            })
+            ->when($stockStatus, function ($queryBuilder) use ($stockStatus) {
+                if ($stockStatus === 'in') {
+                    $queryBuilder->where('stock_quantity', '>', 0); // In Stock
+                } elseif ($stockStatus === 'out') {
+                    $queryBuilder->where('stock_quantity', '<=', 0); // Out of Stock
+                }
+            })
+            ->when($selectedCategory, function ($queryBuilder) use ($selectedCategory) {
+                $queryBuilder->where('category_id', $selectedCategory); // Filter by category
             });
 
-        // Count BEFORE pagination
-        $count = (clone $productsQuery)->count();
 
-        // Sorting
-        if (in_array($sortOrder, ['asc', 'desc'], true)) {
-            $productsQuery->orderBy('selling_price', $sortOrder);
-        } else {
-            $productsQuery->latest('created_at');
-        }
+        $count = $productsQuery->count();
 
-        $products = $productsQuery->paginate(8)->withQueryString();
+        $products = $productsQuery->orderBy('created_at', 'desc')->paginate(8);
 
-        // Load filters
+
+        // $allcategories = Category::with('parent')->get();
         $allcategories = Category::with('parent')->get()->map(function ($category) {
-            $category->hierarchy_string = $category->hierarchy_string;
+            $category->hierarchy_string = $category->hierarchy_string; // Access it
             return $category;
         });
+        $colors = Color::orderBy('created_at', 'desc')->get();
+        $sizes = Size::orderBy('created_at', 'desc')->get();
+        $suppliers = Supplier::orderBy('created_at', 'desc')->get();
 
-        $colors    = Color::orderByDesc('created_at')->get();
-        $sizes     = Size::orderByDesc('created_at')->get();
-        $suppliers = Supplier::orderByDesc('created_at')->get();
 
         return Inertia::render('Products/Index', [
-            'products'         => $products,
-            'allcategories'    => $allcategories,
-            'colors'           => $colors,
-            'sizes'            => $sizes,
-            'suppliers'        => $suppliers,
-            'totalProducts'    => $count,
-            'search'           => $search,
-            'sort'             => $sortOrder,
-            'color'            => $selectedColor,
-            'size'             => $selectedSize,
-            'stockStatus'      => $stockStatus,
-            'selectedCategory' => $selectedCategory,
+            'products' => $products,
+            'allcategories' => $allcategories,
+            'colors' => $colors,
+            'sizes' => $sizes,
+            'suppliers' => $suppliers,
+            'totalProducts' => $count,
+            'search' => $query,
+            'sort' => $sortOrder,
+            'color' => $selectedColor,
+            'size' => $selectedSize,
+            'stockStatus' => $stockStatus,
+            'selectedCategory' => $selectedCategory
         ]);
     }
-
 
 
     /**

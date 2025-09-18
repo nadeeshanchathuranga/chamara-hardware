@@ -174,7 +174,7 @@
                                             stock.transaction_type === 'Sold',
                                         'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300':
                                             stock.transaction_type === 'Deleted' ||
-                                
+
                                             !stock.transaction_type,
                                     }" class="font-medium me-2 px-2.5 py-0.5 rounded">
                                         {{ stock.transaction_type || "N/A" }}

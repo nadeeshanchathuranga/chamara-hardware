@@ -13,25 +13,15 @@ class StockTransactionController extends Controller
      * Display a listing of the resource.
      */
 
-     public function index(Request $request)
+     public function index()
      {
-         $startDate = $request->input('start_date');
-         $endDate = $request->input('end_date');
+         $allStockTransactions = StockTransaction::with('product.supplier')->orderBy('created_at', 'desc')->get();
 
-         $query = StockTransaction::with('product.supplier');
-
-         if ($startDate && $endDate) {
-             $query->whereBetween('transaction_date', [$startDate, $endDate]);
-         }
-
-         $allStockTransactions = $query->orderBy('created_at', 'desc')->get();
 
          return Inertia::render('StockTransaction/Index', [
-            'allStockTransactions' => $allStockTransactions,
-            'totalStockTransactions' => $allStockTransactions->count(),
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-        ]);
+             'allStockTransactions' => $allStockTransactions,
+             'totalStockTransactions' => $allStockTransactions->count()
+         ]);
      }
 
 

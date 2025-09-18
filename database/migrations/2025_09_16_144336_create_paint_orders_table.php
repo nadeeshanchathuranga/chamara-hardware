@@ -33,10 +33,12 @@ return new class extends Migration {
 
             $table->string('can_size', 10);
 
-            // NEW: order quantity
+            // Order quantity
             $table->unsignedInteger('quantity')->default(1);
 
-            $table->decimal('unit_price', 10, 2)->default(0);
+            // ✅ Optional cost price
+            $table->decimal('unit_price', 10, 2)->nullable();
+
             $table->enum('status', ['pending','completed'])->default('pending');
 
             $table->timestamps();

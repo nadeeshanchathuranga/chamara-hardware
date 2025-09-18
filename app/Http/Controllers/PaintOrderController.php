@@ -76,7 +76,7 @@ class PaintOrderController extends Controller
                         'base_type'     => ['id' => $o->base_type_id,       'name' => optional($o->baseType)->name],
                         'can_size'      => $o->can_size,
                         'quantity'      => $o->quantity,
-                        'unit_price'    => $o->unit_price, // COST
+                        'unit_price'    => $o->unit_price, // may be null
                         'status'        => $o->status,
                         'created_at'    => $o->created_at,
                     ];
@@ -96,7 +96,7 @@ class PaintOrderController extends Controller
         ]);
     }
 
-    /** Store order (unit_price = COST) */
+    /** Store order (unit_price = COST, now optional) */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -109,8 +109,11 @@ class PaintOrderController extends Controller
             'base_type_id'  => ['required','exists:base_types,id'],
             'can_size'      => ['required','in:1L,4L,10L'],
 
-            'quantity'      => ['required','integer','min:1'],
-            'unit_price'    => ['required','numeric','min:0'], // COST
+            // you didn't send quantity here in your Make Order page; keep optional or add if you want it
+            'quantity'      => ['nullable','integer','min:1'],
+
+            // ✅ make optional
+            'unit_price'    => ['nullable','numeric','min:0'], // COST (nullable)
             'status'        => ['nullable','in:pending,completed'],
         ]);
 
@@ -136,15 +139,15 @@ class PaintOrderController extends Controller
             }
         }
 
-        // save order (unit_price = COST)
+        // save order (unit_price may be null)
         PaintOrder::create([
             'customer_id'      => $customer->id,
             'paint_product_id' => $data['paint_type_id'],
             'color_card_id'    => $data['color_card_id'],
             'base_type_id'     => $data['base_type_id'],
             'can_size'         => $data['can_size'],
-            'quantity'         => $data['quantity'],
-            'unit_price'       => $data['unit_price'], // COST
+            'quantity'         => $data['quantity'] ?? 1,
+            'unit_price'       => $data['unit_price'] ?? null, // may be null
             'status'           => $data['status'] ?? 'pending',
         ]);
 
@@ -155,7 +158,7 @@ class PaintOrderController extends Controller
      * Pay: converts order -> sale using SELLING price.
      * - SaleItem.unit_price = selling price
      * - Sale.total_amount   = selling price * qty
-     * - Sale.total_cost     = order.unit_price (cost) * qty
+     * - Sale.total_cost     = order.unit_price (cost) * qty (0 if null)
      */
     public function pay(Request $request, PaintOrder $order)
     {
@@ -170,7 +173,7 @@ class PaintOrderController extends Controller
             return DB::transaction(function () use ($data, $order) {
                 $qty        = (int) $data['quantity'];
                 $sell       = (float) $data['selling_price'];
-                $cost       = (float) $order->unit_price; // stored cost
+                $cost       = (float) ($order->unit_price ?? 0); // null-safe
                 $total      = $qty * $sell;
                 $totalCost  = $qty * $cost;
 
@@ -208,7 +211,7 @@ class PaintOrderController extends Controller
                     'order_id'       => 'PO-'.$order->id,
                     'total_amount'   => $total,
                     'discount'       => 0,
-                    'total_cost'     => $totalCost, // record cost
+                    'total_cost'     => $totalCost, // record cost (0 if unknown)
                     'payment_method' => $data['payment_method'],
                     'sale_date'      => now()->toDateString(),
                     'cash'           => $data['cash'] ?? 0,

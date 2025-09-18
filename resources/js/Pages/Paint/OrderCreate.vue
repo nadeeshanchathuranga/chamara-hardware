@@ -81,9 +81,15 @@
                 <p v-if="form.errors.can_size" class="text-red-600 text-sm mt-1">{{ form.errors.can_size }}</p>
               </div>
 
+              <!-- ✅ Unit Price is optional now -->
               <div>
-                <label class="block text-sm">Unit Price *</label>
-                <input v-model.number="form.unit_price" type="number" min="0" step="0.01" class="w-full mt-1 rounded-md border border-gray-300 p-3" placeholder="0.00" />
+                <label class="block text-sm">Unit Price</label>
+                <input
+                  v-model.number="form.unit_price"
+                  type="number" min="0" step="0.01"
+                  class="w-full mt-1 rounded-md border border-gray-300 p-3"
+                  placeholder="0.00"
+                />
                 <p v-if="form.errors.unit_price" class="text-red-600 text-sm mt-1">{{ form.errors.unit_price }}</p>
               </div>
 
@@ -134,7 +140,7 @@ const form = useForm({
   color_card_id: '',
   base_type_id: '',
   can_size: '',
-  unit_price: null,
+  unit_price: null,    // optional
   status: 'pending',
 })
 

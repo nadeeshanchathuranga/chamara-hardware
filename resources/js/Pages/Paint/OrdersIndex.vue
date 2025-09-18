@@ -234,12 +234,15 @@
               <h4 class="text-lg font-bold mb-4 text-emerald-700">Payment Information</h4>
               
               <div class="space-y-4">
+                <!-- ✅ Quantity is locked (disabled) -->
                 <div>
                   <label class="block text-sm font-medium text-gray-700">Quantity *</label>
                   <input
                     type="number" min="1" step="1"
                     v-model.number="pay.quantity"
-                    class="mt-1 w-full rounded-md border border-gray-300 p-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    disabled
+                    class="mt-1 w-full rounded-md border border-gray-300 p-3 bg-gray-100 text-gray-700 cursor-not-allowed"
+                    title="Quantity is fixed for payment"
                   />
                 </div>
 
@@ -640,6 +643,7 @@ const payBalance = computed(() =>
 function openPaymentModal(o){
   // Open payment modal with order data pre-filled
   pay.selectedOrder = o
+  // ✅ Lock quantity to the order's quantity
   pay.quantity = Number(o.quantity ?? 1)
   pay.unit_cost = Number(o.unit_price ?? 0)        // cost from order
   pay.selling_price = Number(o.unit_price ?? 0)    // default selling = cost (editable)
@@ -678,20 +682,22 @@ async function confirmPayment(){
 
   pay.processing = true
   try {
+    // ✅ Always use the original order quantity on the server
+    const qtyUsed = Number(pay.selectedOrder.quantity ?? 1)
+
     await axios.post(route('paints.orders.pay', pay.selectedOrder.id), {
-      quantity: pay.quantity,
+      quantity: qtyUsed,                 // locked
       selling_price: pay.selling_price,
       cash: pay.cash,
       payment_method: pay.method,
     })
 
-    // prepare print modal data (client-side)
-    // NOTE: we include Unit Cost in the product label so it appears on the bill
+    // ✅ Prepare print data WITHOUT unit cost in the name; use locked quantity
     print.products = [{
       id: 'PAINT',
-      name: `${pay.selectedOrder.paint_product?.name || 'Paint'} / ${pay.selectedOrder.can_size} (Unit ${Number(pay.unit_cost).toFixed(2)})`,
-      selling_price: Number(pay.selling_price),      // shown as the line price in POS receipt
-      quantity: Number(pay.quantity),
+      name: `${pay.selectedOrder.paint_product?.name || 'Paint'} / ${pay.selectedOrder.can_size}`,
+      selling_price: Number(pay.selling_price),      // shown as line price
+      quantity: qtyUsed,
       discounted_price: Number(pay.selling_price),
       apply_discount: false,
     }]
@@ -701,10 +707,12 @@ async function confirmPayment(){
       phone: '',
     }
     print.orderid = `PO-${pay.selectedOrder.id}`
+
+    const totalCalc = qtyUsed * Number(pay.selling_price || 0)
     print.cash = Number(pay.cash)
-    print.subTotal = paySubtotal.value.toFixed(2)
-    print.total = paySubtotal.value.toFixed(2)
-    print.balance = Number(payBalance.value.toFixed(2))
+    print.subTotal = totalCalc.toFixed(2)
+    print.total = totalCalc.toFixed(2)
+    print.balance = Number((Number(pay.cash || 0) - totalCalc).toFixed(2))
     print.open = true
 
     // hide cash panel immediately

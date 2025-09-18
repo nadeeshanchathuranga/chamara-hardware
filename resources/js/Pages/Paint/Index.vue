@@ -97,7 +97,7 @@
                   <ShoppingCart class="w-16 h-16 text-white shrink-0" />
                   <div>
                     <p class="text-white text-2xl font-extrabold tracking-wide uppercase">Make Order</p>
-                    <p class="text-white/90 text-base">Create a customer order (placeholder link).</p>
+                    <p class="text-white/90 text-base">Create a customer order.</p>
                   </div>
                 </div>
               </div>

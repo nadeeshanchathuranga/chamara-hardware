@@ -132,8 +132,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // create-only endpoints used by the modal
     Route::post('/paints/types', [PaintProductController::class, 'store'])->name('paints.types.store');
+    Route::put('/paints/types/{paintProduct}', [PaintProductController::class, 'update'])->name('paints.types.update');
+    Route::delete('/paints/types/{paintProduct}', [PaintProductController::class, 'destroy'])->name('paints.types.destroy');
+    
     Route::post('/paints/color-cards', [ColorCardController::class, 'store'])->name('paints.color-cards.store');
+    Route::put('/paints/color-cards/{colorCard}', [ColorCardController::class, 'update'])->name('paints.color-cards.update');
+    Route::delete('/paints/color-cards/{colorCard}', [ColorCardController::class, 'destroy'])->name('paints.color-cards.destroy');
+    
     Route::post('/paints/base-types', [BaseTypeController::class, 'store'])->name('paints.base-types.store');
+    Route::put('/paints/base-types/{baseType}', [BaseTypeController::class, 'update'])->name('paints.base-types.update');
+    Route::delete('/paints/base-types/{baseType}', [BaseTypeController::class, 'destroy'])->name('paints.base-types.destroy');
 
     // Colorance Stock CRUD for the modal
     Route::get('/paints', [PaintController::class, 'index'])->name('paints.index');

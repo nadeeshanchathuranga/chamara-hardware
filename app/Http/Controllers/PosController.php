@@ -36,6 +36,7 @@ class PosController extends Controller
         $colors = Color::orderBy('created_at', 'desc')->get();
         $sizes = Size::orderBy('created_at', 'desc')->get();
         $allemployee = Employee::orderBy('created_at', 'desc')->get();
+        $products = Product::orderBy('name', 'asc')->get(); // Add products in ascending order
 
 
         // Render the page for GET requests
@@ -49,6 +50,7 @@ class PosController extends Controller
             'sizes' => $sizes,
             'sales'=> $sales,
             'saleItems' => $saleItems,
+            'products' => $products, // Add products to props
         ]);
     }
 
@@ -136,6 +138,27 @@ class PosController extends Controller
         // Calculate total combined discount
         $totalDiscount = $productDiscounts + $couponDiscount ;
 
+        // Calculate custom discount
+        $customDiscount = floatval($request->input('custom_discount', 0));
+        $customDiscountType = $request->input('custom_discount_type', 'percent');
+        
+        $customValue = 0;
+        if ($customDiscountType === 'percent') {
+            $customValue = ($totalAmount * $customDiscount) / 100;
+        } else if ($customDiscountType === 'fixed') {
+            $customValue = $customDiscount;
+        }
+
+        // Calculate base total after discounts
+        $baseTotal = $totalAmount - $totalDiscount - $customValue - $totalReturnAmount;
+
+        // Add Koko surcharge if payment method is Koko
+        $finalTotal = $baseTotal;
+        if ($request->input('paymentMethod') === 'Koko') {
+            $kokoSurcharge = $baseTotal * 0.115; // 11.5% surcharge
+            $finalTotal = $baseTotal + $kokoSurcharge;
+        }
+
         DB::beginTransaction(); // Start a transaction
 
         try {
@@ -174,7 +197,7 @@ class PosController extends Controller
                 'employee_id' => $request->input('employee_id'),
                 'user_id' => $request->input('userId'), // Logged-in user ID
                 'order_id' => $request->input('orderid'),
-                'total_amount' =>$totalAmount - $totalReturnAmount, // Total amount of the sale
+                'total_amount' => $finalTotal, // Total amount including Koko surcharge if applicable
                 'discount' => $totalDiscount, // Default discount to 0 if not provided
                 'total_cost' => $totalCost,
                 'payment_method' => $request->input('paymentMethod'), // Payment method from the request

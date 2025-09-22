@@ -14,6 +14,8 @@ class PaintOrder extends Model
         'paint_product_id',
         'color_card_id',
         'base_type_id',
+        'product_name',
+        'product_code',
         'can_size',
         'quantity',
         'unit_price',

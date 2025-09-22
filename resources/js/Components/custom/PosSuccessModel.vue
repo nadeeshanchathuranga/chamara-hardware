@@ -96,7 +96,9 @@
        totalDiscount: String,
        total: String,
        custom_discount: Number,
-       custom_discount_type: String
+       custom_discount_type: String,
+       paymentMethod: String,
+       kokoSurcharge: String
    });
 
    const handlePrintReceipt = () => {
@@ -232,7 +234,7 @@
                  justify-content: space-between;
                  margin-bottom: 8px;
              }
-             .totals div:nth-child(4) {
+             .totals .total-line {
                  font-size: 14px;
                  font-weight: bold;
              }
@@ -284,6 +286,13 @@
              <p>Cashier:</p>
              <small>${props.cashier.name}</small>
            </div>
+         </div>
+         <div class="info-row">
+           <div>
+             <p>Payment Method:</p>
+             <small>${props.paymentMethod || 'Cash'}</small>
+           </div>
+           <div></div>
          </div>
        </div>
 
@@ -393,7 +402,12 @@
                props.custom_discount_type === 'fixed' ? 'LKR' : ''}
            </span>
          </div>
+         ${props.paymentMethod === 'Koko' ? `
          <div>
+           <span>Koko Surcharge (11.5%)</span>
+           <span>${(Number(props.kokoSurcharge) || 0).toFixed(2)} LKR</span>
+         </div>` : ''}
+         <div class="total-line">
            <span>Total</span>
            <span>${(Number(props.total) || 0).toFixed(2)} LKR</span>
          </div>

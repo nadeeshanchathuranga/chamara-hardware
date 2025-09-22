@@ -65,7 +65,7 @@ class PaintOrderController extends Controller
                 ->latest()
                 ->get([
                     'id','customer_id','paint_product_id','color_card_id','base_type_id',
-                    'can_size','quantity','unit_price','status','created_at'
+                    'product_name','product_code','can_size','quantity','unit_price','status','created_at'
                 ])
                 ->map(function ($o) {
                     return [
@@ -74,6 +74,8 @@ class PaintOrderController extends Controller
                         'paint_product' => ['id' => $o->paint_product_id,   'name' => optional($o->paintProduct)->name],
                         'color_card'    => ['id' => $o->color_card_id,      'name' => optional($o->colorCard)->name],
                         'base_type'     => ['id' => $o->base_type_id,       'name' => optional($o->baseType)->name],
+                        'product_name'  => $o->product_name,
+                        'product_code'  => $o->product_code,
                         'can_size'      => $o->can_size,
                         'quantity'      => $o->quantity,
                         'unit_price'    => $o->unit_price, // may be null
@@ -107,6 +109,8 @@ class PaintOrderController extends Controller
             'paint_type_id' => ['required','exists:paint_products,id'],
             'color_card_id' => ['required','exists:color_cards,id'],
             'base_type_id'  => ['required','exists:base_types,id'],
+            'product_name'  => ['nullable','string','max:191'],
+            'product_code'  => ['nullable','string','max:100'],
             'can_size'      => ['required','in:1L,4L,10L'],
 
             // you didn't send quantity here in your Make Order page; keep optional or add if you want it
@@ -145,6 +149,8 @@ class PaintOrderController extends Controller
             'paint_product_id' => $data['paint_type_id'],
             'color_card_id'    => $data['color_card_id'],
             'base_type_id'     => $data['base_type_id'],
+            'product_name'     => $data['product_name'] ?? null,
+            'product_code'     => $data['product_code'] ?? null,
             'can_size'         => $data['can_size'],
             'quantity'         => $data['quantity'] ?? 1,
             'unit_price'       => $data['unit_price'] ?? null, // may be null
@@ -166,7 +172,7 @@ class PaintOrderController extends Controller
             'quantity'       => ['required','integer','min:1'],
             'selling_price'  => ['required','numeric','min:0'],
             'cash'           => ['nullable','numeric','min:0'],
-            'payment_method' => ['required','in:cash,card'],
+            'payment_method' => ['required','in:Cash,Card,Koko'], // Ensure proper capitalization
         ]);
 
         try {
@@ -174,8 +180,15 @@ class PaintOrderController extends Controller
                 $qty        = (int) $data['quantity'];
                 $sell       = (float) $data['selling_price'];
                 $cost       = (float) ($order->unit_price ?? 0); // null-safe
-                $total      = $qty * $sell;
+                $baseTotal  = $qty * $sell;
                 $totalCost  = $qty * $cost;
+                
+                // Add Koko surcharge if payment method is Koko
+                $finalTotal = $baseTotal;
+                if ($data['payment_method'] === 'Koko') {
+                    $kokoSurcharge = $baseTotal * 0.115; // 11.5% surcharge
+                    $finalTotal = $baseTotal + $kokoSurcharge;
+                }
 
                 // ensure a generic product exists
                 $sku  = 'PAINT-CUSTOM';
@@ -202,28 +215,35 @@ class PaintOrderController extends Controller
                 }
 
                 $userId     = optional(Auth::user())->id ?? 1;     // ensure exists if NOT NULL
-                $employeeId = Employee::value('id');                // null okay if column nullable
+                $employeeId = Employee::value('id');                // Get first available employee ID
 
-                $sale = Sale::create([
-                    'customer_id'    => $order->customer_id,
-                    'employee_id'    => $employeeId,
-                    'user_id'        => $userId,
-                    'order_id'       => 'PO-'.$order->id,
-                    'total_amount'   => $total,
-                    'discount'       => 0,
-                    'total_cost'     => $totalCost, // record cost (0 if unknown)
-                    'payment_method' => $data['payment_method'],
-                    'sale_date'      => now()->toDateString(),
-                    'cash'           => $data['cash'] ?? 0,
-                    'custom_discount'=> 0,
-                ]);
+                // Determine cash amount - only set if payment method is Cash
+                $cashAmount = null;
+                if ($data['payment_method'] === 'Cash') {
+                    $cashAmount = $data['cash'] ?? $finalTotal; // Use provided cash or total amount
+                }
+
+                // Create sale with explicit field assignment to avoid any column order issues
+                $sale = new Sale();
+                $sale->customer_id = $order->customer_id; // Link to customer from paint order
+                $sale->employee_id = $employeeId; // Link to employee
+                $sale->user_id = $userId; // Link to current user
+                $sale->order_id = 'PO-'.$order->id;
+                $sale->total_amount = (float) $finalTotal; // Ensure numeric
+                $sale->total_cost = (float) $totalCost; // Ensure numeric
+                $sale->discount = (float) 0; // Ensure numeric discount (0 for paint orders)
+                $sale->payment_method = $data['payment_method']; // Store correct payment method
+                $sale->sale_date = now()->toDateString();
+                $sale->cash = $cashAmount; // Only set for Cash payments
+                $sale->custom_discount = (float) 0; // Ensure numeric
+                $sale->save();
 
                 SaleItem::create([
                     'sale_id'     => $sale->id,
                     'product_id'  => $genericProduct->id,
                     'quantity'    => $qty,
                     'unit_price'  => $sell,   // SELLING price on the bill
-                    'total_price' => $total,
+                    'total_price' => $baseTotal,
                 ]);
 
                 $order->update(['status' => 'completed']);
@@ -244,8 +264,8 @@ class PaintOrderController extends Controller
                         'quantity' => $qty,
                         'unit_cost' => $cost,
                         'selling_price' => $sell,
-                        'total_amount' => $total,
-                        'profit' => $total - $totalCost,
+                        'total_amount' => $finalTotal,
+                        'profit' => $finalTotal - $totalCost,
                         'payment_method' => $data['payment_method'],
                         'sale_date' => now()->toDateString(),
                     ]),

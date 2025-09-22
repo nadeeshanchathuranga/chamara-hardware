@@ -88,6 +88,8 @@
                   <th class="px-2 py-4 text-left text-xs font-semibold">Paint Product</th>
                   <th class="px-2 py-4 text-left text-xs font-semibold">Color Card</th>
                   <th class="px-2 py-4 text-left text-xs font-semibold">Base Type</th>
+                  <th class="px-2 py-4 text-left text-xs font-semibold">Product Name</th>
+                  <th class="px-2 py-4 text-left text-xs font-semibold">Product Code</th>
                   <th class="px-2 py-4 text-left text-xs font-semibold">Can Size</th>
                   <th class="px-2 py-4 text-left text-xs font-semibold">Qty</th>
                   <th class="px-2 py-4 text-left text-xs font-semibold">Unit Cost</th>
@@ -117,6 +119,16 @@
                   <td class="px-2 py-3 text-xs">
                     <div class="truncate" :title="o.base_type?.name">
                       {{ o.base_type?.name || 'N/A' }}
+                    </div>
+                  </td>
+                  <td class="px-2 py-3 text-xs">
+                    <div class="truncate" :title="o.product_name">
+                      {{ o.product_name || '-' }}
+                    </div>
+                  </td>
+                  <td class="px-2 py-3 text-xs">
+                    <div class="truncate" :title="o.product_code">
+                      {{ o.product_code || '-' }}
                     </div>
                   </td>
                   <td class="px-2 py-3 text-xs font-medium">{{ o.can_size }}</td>
@@ -226,6 +238,22 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- Product Details Row -->
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Product Name</label>
+                    <div class="mt-1 p-3 bg-white rounded-md border border-gray-300 text-sm">
+                      {{ pay.selectedOrder.product_name || '-' }}
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700">Product Code</label>
+                    <div class="mt-1 p-3 bg-white rounded-md border border-gray-300 text-sm">
+                      {{ pay.selectedOrder.product_code || '-' }}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -260,22 +288,29 @@
                   <div class="mt-1 flex gap-3">
                     <button
                       class="flex-1 px-4 py-3 rounded-md border-2 transition-colors"
-                      :class="pay.method==='cash' ? 'bg-emerald-100 border-emerald-500 text-emerald-700' : 'bg-white border-gray-300'"
-                      @click="pay.method='cash'"
+                      :class="pay.method==='Cash' ? 'bg-emerald-100 border-emerald-500 text-emerald-700' : 'bg-white border-gray-300'"
+                      @click="pay.method='Cash'"
                     >
                       💵 Cash
                     </button>
                     <button
                       class="flex-1 px-4 py-3 rounded-md border-2 transition-colors"
-                      :class="pay.method==='card' ? 'bg-emerald-100 border-emerald-500 text-emerald-700' : 'bg-white border-gray-300'"
-                      @click="pay.method='card'"
+                      :class="pay.method==='Card' ? 'bg-emerald-100 border-emerald-500 text-emerald-700' : 'bg-white border-gray-300'"
+                      @click="pay.method='Card'"
                     >
                       💳 Card
+                    </button>
+                    <button
+                      class="flex-1 px-4 py-3 rounded-md border-2 transition-colors"
+                      :class="pay.method==='Koko' ? 'bg-emerald-100 border-emerald-500 text-emerald-700' : 'bg-white border-gray-300'"
+                      @click="pay.method='Koko'"
+                    >
+                      🏦 Koko
                     </button>
                   </div>
                 </div>
 
-                <div v-if="pay.method === 'cash'">
+                <div v-if="pay.method === 'Cash'">
                   <label class="block text-sm font-medium text-gray-700">Cash Amount (LKR) *</label>
                   <input
                     type="number" min="0" step="0.01"
@@ -292,21 +327,25 @@
                     <span class="text-sm text-gray-600">Subtotal:</span>
                     <span class="font-medium">{{ paySubtotal.toFixed(2) }} LKR</span>
                   </div>
-                  <div v-if="pay.method === 'cash'" class="flex justify-between">
+                  <div v-if="pay.method === 'Koko'" class="flex justify-between">
+                    <span class="text-sm text-gray-600">Koko Surcharge (11.5%):</span>
+                    <span class="font-medium">{{ kokoSurcharge.toFixed(2) }} LKR</span>
+                  </div>
+                  <div class="flex justify-between border-t pt-2">
+                    <span class="text-sm font-medium text-gray-800">Total:</span>
+                    <span class="font-bold text-lg text-emerald-600">{{ payTotal.toFixed(2) }} LKR</span>
+                  </div>
+                  <div v-if="pay.method === 'Cash'" class="flex justify-between">
                     <span class="text-sm text-gray-600">Cash:</span>
                     <span class="font-medium">{{ Number(pay.cash || 0).toFixed(2) }} LKR</span>
                   </div>
-                  <div v-if="pay.method === 'cash'" class="flex justify-between border-t pt-2">
+                  <div v-if="pay.method === 'Cash'" class="flex justify-between border-t pt-2">
                     <span class="text-sm font-medium" :class="payBalance < 0 ? 'text-red-600' : 'text-emerald-600'">
                       Balance:
                     </span>
                     <span class="font-bold text-lg" :class="payBalance < 0 ? 'text-red-600' : 'text-emerald-600'">
                       {{ payBalance.toFixed(2) }} LKR
                     </span>
-                  </div>
-                  <div v-else class="flex justify-between border-t pt-2">
-                    <span class="text-sm font-medium text-emerald-600">Total:</span>
-                    <span class="font-bold text-lg text-emerald-600">{{ paySubtotal.toFixed(2) }} LKR</span>
                   </div>
                 </div>
               </div>
@@ -323,7 +362,7 @@
             </button>
             <button
               class="px-8 py-3 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 font-medium transition-colors"
-              :disabled="pay.processing || paySubtotal <= 0 || (pay.method === 'cash' && payBalance < 0)"
+              :disabled="pay.processing || payTotal <= 0 || (pay.method === 'Cash' && payBalance < 0)"
               @click="confirmPayment"
             >
               <span v-if="pay.processing">Processing...</span>
@@ -432,6 +471,29 @@
                 </div>
               </div>
 
+              <!-- Product Details row -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+                <div>
+                  <label class="block text-sm">Product Name</label>
+                  <input v-model="orderForm.product_name" type="text" 
+                         class="w-full mt-1 rounded-md border border-gray-300 p-4" 
+                         placeholder="e.g. Premium Wall Paint" />
+                  <p v-if="orderForm.errors.product_name" class="text-red-600 text-sm mt-1">
+                    {{ orderForm.errors.product_name }}
+                  </p>
+                </div>
+
+                <div>
+                  <label class="block text-sm">Product Code</label>
+                  <input v-model="orderForm.product_code" type="text" 
+                         class="w-full mt-1 rounded-md border border-gray-300 p-4" 
+                         placeholder="e.g. PWP-001" />
+                  <p v-if="orderForm.errors.product_code" class="text-red-600 text-sm mt-1">
+                    {{ orderForm.errors.product_code }}
+                  </p>
+                </div>
+              </div>
+
               <!-- Sizes / pricing row -->
               <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-5">
                 <div>
@@ -491,6 +553,8 @@
     :total="String(print.total)"
     :custom_discount_type="'fixed'"
     :custom_discount="0"
+    :paymentMethod="print.paymentMethod || 'cash'"
+    :kokoSurcharge="print.kokoSurcharge || '0'"
     :companyInfo="null"
   />
 </template>
@@ -586,6 +650,8 @@ const orderForm = useForm({
   paint_type_id: '',
   color_card_id: '',
   base_type_id: '',
+  product_name: '',
+  product_code: '',
   can_size: '',
   quantity: 1,
   unit_price: null, // COST
@@ -614,6 +680,7 @@ function submitOrder () {
       orderForm.reset(
         'customer_name','phone','email',
         'paint_type_id','color_card_id','base_type_id',
+        'product_name','product_code',
         'can_size','quantity','unit_price'
       )
       selectedCustomerId.value = ''
@@ -636,9 +703,32 @@ const pay = reactive({
 const paySubtotal = computed(() =>
   Number(pay.quantity || 0) * Number(pay.selling_price || 0)
 )
+
+const kokoSurcharge = computed(() => {
+  if (pay.method === 'Koko') {
+    return paySubtotal.value * 0.115 // 11.5% surcharge
+  }
+  return 0
+})
+
+const payTotal = computed(() => {
+  return paySubtotal.value + kokoSurcharge.value
+})
+
 const payBalance = computed(() =>
-  Number(pay.cash || 0) - paySubtotal.value
+  Number(pay.cash || 0) - payTotal.value
 )
+
+// Watch for payment method changes and update cash accordingly
+watch(() => pay.method, (newMethod) => {
+  if (newMethod === 'Cash') {
+    // For cash payments, set cash to total amount (including any surcharge)
+    pay.cash = payTotal.value
+  } else {
+    // For Card/Koko payments, cash is not needed
+    pay.cash = 0
+  }
+})
 
 function openPaymentModal(o){
   // Open payment modal with order data pre-filled
@@ -647,9 +737,9 @@ function openPaymentModal(o){
   pay.quantity = Number(o.quantity ?? 1)
   pay.unit_cost = Number(o.unit_price ?? 0)        // cost from order
   pay.selling_price = Number(o.unit_price ?? 0)    // default selling = cost (editable)
-  pay.method = 'cash'
+  pay.method = 'Cash'
   
-  // Set cash after selling_price is set using nextTick for reactivity
+  // Set cash to subtotal initially (before any surcharge)
   nextTick(() => {
     pay.cash = paySubtotal.value
   })
@@ -661,7 +751,7 @@ function cancelPayment(){
   pay.unit_cost = 0
   pay.selling_price = 0
   pay.cash = 0
-  pay.method = 'cash'
+  pay.method = 'Cash'
 }
 
 /* print data */
@@ -678,24 +768,37 @@ const print = reactive({
 
 async function confirmPayment(){
   if (!pay.selectedOrder) return
-  if (payBalance.value < 0) return
+  if (pay.method === 'Cash' && payBalance.value < 0) return
 
   pay.processing = true
   try {
     // ✅ Always use the original order quantity on the server
     const qtyUsed = Number(pay.selectedOrder.quantity ?? 1)
+    
+    // For non-cash payments, send the total amount as cash for backend processing
+    const cashAmount = pay.method === 'Cash' ? pay.cash : payTotal.value
 
     await axios.post(route('paints.orders.pay', pay.selectedOrder.id), {
       quantity: qtyUsed,                 // locked
       selling_price: pay.selling_price,
-      cash: pay.cash,
+      cash: cashAmount,
       payment_method: pay.method,
     })
 
-    // ✅ Prepare print data WITHOUT unit cost in the name; use locked quantity
+    // ✅ Prepare print data WITH product name for bill printing (no code)
+    const productParts = []
+    
+    // Add product name if available
+    if (pay.selectedOrder.product_name) {
+      productParts.push(pay.selectedOrder.product_name)
+    }
+    
+    // Add paint product name and can size
+    productParts.push(`${pay.selectedOrder.paint_product?.name || 'Paint'} / ${pay.selectedOrder.can_size}`)
+    
     print.products = [{
       id: 'PAINT',
-      name: `${pay.selectedOrder.paint_product?.name || 'Paint'} / ${pay.selectedOrder.can_size}`,
+      name: productParts.join(' - '),
       selling_price: Number(pay.selling_price),      // shown as line price
       quantity: qtyUsed,
       discounted_price: Number(pay.selling_price),
@@ -709,10 +812,13 @@ async function confirmPayment(){
     print.orderid = `PO-${pay.selectedOrder.id}`
 
     const totalCalc = qtyUsed * Number(pay.selling_price || 0)
-    print.cash = Number(pay.cash)
+    const printCashAmount = pay.method === 'Cash' ? Number(pay.cash) : payTotal.value
+    print.cash = printCashAmount
     print.subTotal = totalCalc.toFixed(2)
-    print.total = totalCalc.toFixed(2)
-    print.balance = Number((Number(pay.cash || 0) - totalCalc).toFixed(2))
+    print.total = payTotal.value.toFixed(2)
+    print.balance = Number((printCashAmount - payTotal.value).toFixed(2))
+    print.paymentMethod = pay.method
+    print.kokoSurcharge = pay.method === 'Koko' ? kokoSurcharge.value.toFixed(2) : '0'
     print.open = true
 
     // hide cash panel immediately
@@ -765,34 +871,40 @@ async function confirmPayment(){
 .responsive-table td:nth-child(1) { width: 5%; } /* Order ID */
 
 .responsive-table th:nth-child(2),
-.responsive-table td:nth-child(2) { width: 15%; } /* Customer */
+.responsive-table td:nth-child(2) { width: 12%; } /* Customer */
 
 .responsive-table th:nth-child(3),
-.responsive-table td:nth-child(3) { width: 13%; } /* Paint Product */
+.responsive-table td:nth-child(3) { width: 10%; } /* Paint Product */
 
 .responsive-table th:nth-child(4),
-.responsive-table td:nth-child(4) { width: 13%; } /* Color Card */
+.responsive-table td:nth-child(4) { width: 10%; } /* Color Card */
 
 .responsive-table th:nth-child(5),
-.responsive-table td:nth-child(5) { width: 10%; } /* Base Type */
+.responsive-table td:nth-child(5) { width: 8%; } /* Base Type */
 
 .responsive-table th:nth-child(6),
-.responsive-table td:nth-child(6) { width: 8%; } /* Can Size */
+.responsive-table td:nth-child(6) { width: 10%; } /* Product Name */
 
 .responsive-table th:nth-child(7),
-.responsive-table td:nth-child(7) { width: 5%; } /* Qty */
+.responsive-table td:nth-child(7) { width: 8%; } /* Product Code */
 
 .responsive-table th:nth-child(8),
-.responsive-table td:nth-child(8) { width: 10%; } /* Unit Cost */
+.responsive-table td:nth-child(8) { width: 7%; } /* Can Size */
 
 .responsive-table th:nth-child(9),
-.responsive-table td:nth-child(9) { width: 8%; } /* Status */
+.responsive-table td:nth-child(9) { width: 4%; } /* Qty */
 
 .responsive-table th:nth-child(10),
-.responsive-table td:nth-child(10) { width: 13%; } /* Created */
+.responsive-table td:nth-child(10) { width: 8%; } /* Unit Cost */
 
 .responsive-table th:nth-child(11),
-.responsive-table td:nth-child(11) { width: 6%; } /* Actions */
+.responsive-table td:nth-child(11) { width: 7%; } /* Status */
+
+.responsive-table th:nth-child(12),
+.responsive-table td:nth-child(12) { width: 10%; } /* Created */
+
+.responsive-table th:nth-child(13),
+.responsive-table td:nth-child(13) { width: 6%; } /* Actions */
 
 /* Custom scrollbar styles */
 .scrollbar-thin {

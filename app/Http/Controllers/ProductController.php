@@ -43,8 +43,8 @@ class ProductController extends Controller
         $productsQuery = Product::with('category', 'color', 'size', 'supplier')
             ->when($query, function ($queryBuilder) use ($query) {
                 $queryBuilder->where(function ($subQuery) use ($query) {
-                    $subQuery->where('name', 'like', "%{$query}%")
-                        ->orWhere('code', 'like', "%{$query}%");
+                    $subQuery->where('name', 'like', "{$query}%")
+                        ->orWhere('code', 'like', "{$query}%");
                 });
             })
             ->when($selectedColor, function ($queryBuilder) use ($selectedColor) {
@@ -71,7 +71,12 @@ class ProductController extends Controller
                 $queryBuilder->where('category_id', $selectedCategory);
             });
 
-        $products = $productsQuery->orderBy('created_at', 'desc')->paginate(8);
+        // Order by name ascending when searching, otherwise by creation date
+        if ($query) {
+            $products = $productsQuery->orderBy('name', 'asc')->paginate(8);
+        } else {
+            $products = $productsQuery->orderBy('created_at', 'desc')->paginate(8);
+        }
 
         return response()->json([
             'products' => $products,
@@ -94,8 +99,8 @@ class ProductController extends Controller
         $productsQuery = Product::with('category', 'color', 'size', 'supplier')
             ->when($query, function ($queryBuilder) use ($query) {
                 $queryBuilder->where(function ($subQuery) use ($query) {
-                    $subQuery->where('name', 'like', "%{$query}%")
-                        ->orWhere('code', 'like', "%{$query}%");
+                    $subQuery->where('name', 'like', "{$query}%")
+                        ->orWhere('code', 'like', "{$query}%");
                 });
             })
             ->when($selectedColor, function ($queryBuilder) use ($selectedColor) {
@@ -125,7 +130,12 @@ class ProductController extends Controller
 
         $count = $productsQuery->count();
 
-        $products = $productsQuery->orderBy('created_at', 'desc')->paginate(8);
+        // Order by name ascending when searching, otherwise by creation date
+        if ($query) {
+            $products = $productsQuery->orderBy('name', 'asc')->paginate(8);
+        } else {
+            $products = $productsQuery->orderBy('created_at', 'desc')->paginate(8);
+        }
 
 
         // $allcategories = Category::with('parent')->get();

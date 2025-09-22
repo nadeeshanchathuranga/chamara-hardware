@@ -98,16 +98,16 @@
                             </div>
                         </div>
 
-                        <!-- <div class="max-w-xs relative space-y-3">
-              <label for="search" class="text-gray-900">
+                        <div class="max-w-xs relative space-y-3">
+              <label for="searchProducts" class="text-gray-900">
                 Type the product name to search
               </label>
 
               <input
                 v-model="form.barcode"
-                id="search"
+                id="searchProducts"
                 type="text"
-                placeholder="Enter BarCode Here!"
+                placeholder="Enter Product Name or BarCode!"
                 class="w-full h-16 px-4 rounded-l-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
 
@@ -124,7 +124,7 @@
                   @click="selectProduct(product.name)"
                   class="cursor-pointer hover:bg-gray-100 p-1"
                 >
-                  {{ product.name }}
+                  {{ product.name }} ({{ product.barcode || product.code }})
                 </li>
               </ul>
 
@@ -132,7 +132,7 @@
                 You have selected:
                 <span class="font-semibold">{{ form.barcode }}</span>
               </p>
-            </div> -->
+            </div>
 
                         <div class="w-full text-center">
                             <p v-if="products.length === 0" class="text-2xl text-red-500">
@@ -301,6 +301,10 @@
                                     <span class="ml-2">LKR</span>
                                 </span>
                             </div>
+                            <div v-if="selectedPaymentMethod === 'Koko'" class="flex items-center justify-between w-full px-8 pt-4 pb-4 border-b border-black">
+                                <p class="text-xl text-black">Koko Surcharge (11.5%)</p>
+                                <p class="text-xl">{{ kokoSurcharge }} LKR</p>
+                            </div>
                             <div class="flex items-center justify-between w-full px-8 pt-4">
                                 <p class="text-3xl text-black">Total</p>
                                 <p class="text-3xl text-black">{{ total }} LKR</p>
@@ -354,6 +358,14 @@
                                 ]">
                                     <img src="/images/bank-card.png" alt="" class="w-24" />
                                 </div>
+                                <div @click="selectedPaymentMethod = 'Koko'" :class="[
+                                    'cursor-pointer w-[100px] border border-black rounded-xl flex flex-col justify-center items-center text-center',
+                                    selectedPaymentMethod === 'Koko'
+                                        ? 'bg-yellow-500 font-bold'
+                                        : 'text-black',
+                                ]">
+                                    <img src="/images/koko-logo.png" alt="Koko Payment" class="w-24" />
+                                </div>
                             </div>
 
                             <div class="flex items-center justify-center w-full">
@@ -379,7 +391,7 @@
         :employee="employee" :cashier="loggedInUser" :customer="customer" :orderid="orderid" :cash="cash"
         :balance="balance" :subTotal="subtotal" :totalDiscount="totalDiscount" :total="total"
         :custom_discount_type="custom_discount_type"
-        :custom_discount="custom_discount" />
+        :custom_discount="custom_discount" :paymentMethod="selectedPaymentMethod" :kokoSurcharge="kokoSurcharge" />
     <AlertModel v-model:open="isAlertModalOpen" :message="message" />
 
     <SelectProductModel v-model:open="isSelectModalOpen" :allcategories="allcategories" :colors="colors" :sizes="sizes"
@@ -601,6 +613,10 @@ const props = defineProps({
     sizes: Array,
     sales:Array,
     saleItems: { // Add this prop
+        type: Array,
+        default: () => []
+    },
+    products: { // Add products prop
         type: Array,
         default: () => []
     },
@@ -883,7 +899,36 @@ const total = computed(() => {
         customValue = customDiscount;
     }
 
-    return (subtotalValue - discountValue - customValue - returnAmount).toFixed(2);
+    let baseTotal = subtotalValue - discountValue - customValue - returnAmount;
+    
+    // Add Koko surcharge if Koko payment method is selected
+    if (selectedPaymentMethod.value === 'Koko') {
+        const kokoSurcharge = baseTotal * 0.115; // 11.5% surcharge
+        baseTotal += kokoSurcharge;
+    }
+
+    return baseTotal.toFixed(2);
+});
+
+const kokoSurcharge = computed(() => {
+    if (selectedPaymentMethod.value === 'Koko') {
+        const subtotalValue = parseFloat(subtotal.value) || 0;
+        const discountValue = parseFloat(totalDiscount.value) || 0;
+        const customDiscount = parseFloat(custom_discount.value) || 0;
+        const returnAmount = parseFloat(returnBillTotal.value) || 0;
+
+        let customValue = 0;
+
+        if (custom_discount_type.value === 'percent') {
+            customValue = (subtotalValue * customDiscount) / 100;
+        } else if (custom_discount_type.value === 'fixed') {
+            customValue = customDiscount;
+        }
+
+        const baseTotal = subtotalValue - discountValue - customValue - returnAmount;
+        return (baseTotal * 0.115).toFixed(2); // 11.5% surcharge
+    }
+    return '0.00';
 });
 
 const balance = computed(() => {
@@ -1098,38 +1143,53 @@ const handleSelectedProducts = (selectedProducts) => {
 // });
 
 
-// const searchTerm = ref(form.barcode);
+const searchTerm = ref('');
 
-// // Computed property for filtered product results
-// const searchResults = computed(() => {
-//   if (searchTerm.value === "") {
-//     return [];
-//   }
+// Computed property for filtered product results in ascending order
+const searchResults = computed(() => {
+  if (searchTerm.value === "" || searchTerm.value.length < 2) {
+    return [];
+  }
 
-//   let matches = 0;
+  const searchLower = searchTerm.value.toLowerCase();
+  
+  return props.products
+    .filter((product) => {
+      const name = product.name.toLowerCase();
+      const barcode = product.barcode?.toLowerCase() || '';
+      const code = product.code?.toLowerCase() || '';
+      
+      // Match if name starts with search term, or exact barcode/code match
+      return name.startsWith(searchLower) || 
+             barcode === searchLower || 
+             code === searchLower ||
+             barcode.startsWith(searchLower) ||
+             code.startsWith(searchLower);
+    })
+    .sort((a, b) => {
+      // Sort by priority: exact start match first, then alphabetical
+      const aStarts = a.name.toLowerCase().startsWith(searchLower);
+      const bStarts = b.name.toLowerCase().startsWith(searchLower);
+      
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+      
+      return a.name.localeCompare(b.name);
+    })
+    .slice(0, 10); // Limit to 10 results
+});
 
-//   return props.products.filter((product) => {
-//     if (
-//       product.name.toLowerCase().includes(searchTerm.value.toLowerCase()) &&
-//       matches < 10
-//     ) {
-//       matches++;
-//       return product;
-//     }
-//   });
-// });
+// Watch for changes in the form barcode field and update the search term
+watch(
+  () => form.barcode,
+  (newValue) => {
+    searchTerm.value = newValue;
+  }
+);
 
-// // Watch for changes in the form barcode field and update the search term
-// watch(
-//   () => form.barcode,
-//   (newValue) => {
-//     searchTerm.value = newValue;
-//   }
-// );
-
-// // Method to select a product (or barcode)
-// const selectProduct = (productName) => {
-//   form.barcode = productName; // Set the selected product name to the barcode field
-//   searchTerm.value = ""; // Clear the search term after selection
-// };
+// Method to select a product (or barcode)
+const selectProduct = (productName) => {
+  form.barcode = productName; // Set the selected product name to the barcode field
+  searchTerm.value = ""; // Clear the search term after selection
+};
 </script>

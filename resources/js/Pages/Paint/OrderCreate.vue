@@ -71,6 +71,25 @@
               </div>
             </div>
 
+            <!-- Product Details -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <label class="block text-sm">Product Name</label>
+                <input v-model="form.product_name" type="text" 
+                       class="w-full mt-1 rounded-md border border-gray-300 p-3" 
+                       placeholder="e.g. Premium Wall Paint" />
+                <p v-if="form.errors.product_name" class="text-red-600 text-sm mt-1">{{ form.errors.product_name }}</p>
+              </div>
+
+              <div>
+                <label class="block text-sm">Product Code</label>
+                <input v-model="form.product_code" type="text" 
+                       class="w-full mt-1 rounded-md border border-gray-300 p-3" 
+                       placeholder="e.g. PWP-001" />
+                <p v-if="form.errors.product_code" class="text-red-600 text-sm mt-1">{{ form.errors.product_code }}</p>
+              </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
               <div>
                 <label class="block text-sm">Can Size *</label>
@@ -139,6 +158,8 @@ const form = useForm({
   paint_type_id: '',
   color_card_id: '',
   base_type_id: '',
+  product_name: '',
+  product_code: '',
   can_size: '',
   unit_price: null,    // optional
   status: 'pending',
@@ -149,6 +170,7 @@ function submit () {
     onSuccess: () => form.reset(
       'customer_name','phone','email',
       'paint_type_id','color_card_id','base_type_id',
+      'product_name','product_code',
       'can_size','unit_price','status'
     ),
   })

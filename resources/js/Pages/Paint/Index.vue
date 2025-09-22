@@ -21,7 +21,7 @@
           <!-- Row 1: small cards -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Paint Type -->
-            <div role="button" @click="openModal('paint')" class="cursor-pointer">
+            <div role="button" @click="openPaintTypes()" class="cursor-pointer">
               <div class="dashboard-card bg-[#c62e51] hover:-translate-y-1 transition-transform duration-200 rounded-2xl shadow-lg">
                 <div class="flex items-start p-5 space-x-4">
                   <Paintbrush class="w-14 h-14 text-white shrink-0" />
@@ -34,7 +34,7 @@
             </div>
 
             <!-- Color Card -->
-            <div role="button" @click="openModal('colorCard')" class="cursor-pointer">
+            <div role="button" @click="openColorCards()" class="cursor-pointer">
               <div class="dashboard-card bg-[#2e7ac6] hover:-translate-y-1 transition-transform duration-200 rounded-2xl shadow-lg">
                 <div class="flex items-start p-5 space-x-4">
                   <Palette class="w-14 h-14 text-white shrink-0" />
@@ -47,7 +47,7 @@
             </div>
 
             <!-- Base Type -->
-            <div role="button" @click="openModal('baseType')" class="cursor-pointer">
+            <div role="button" @click="openBaseTypes()" class="cursor-pointer">
               <div class="dashboard-card bg-[#16a34a] hover:-translate-y-1 transition-transform duration-200 rounded-2xl shadow-lg">
                 <div class="flex items-start p-5 space-x-4">
                   <Layers class="w-14 h-14 text-white shrink-0" />
@@ -373,6 +373,240 @@
       </div>
     </div>
   </transition>
+
+  <!-- Paint Types CRUD modal (centered) -->
+  <transition name="fade">
+    <div v-if="isPaintTypesOpen" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/50 z-0" @click="closePaintTypes"></div>
+
+      <div
+        class="relative z-10 w-11/12 md:w-[1100px] max-h-[85vh] overflow-y-auto rounded-2xl
+               border-4 border-rose-500 bg-white text-gray-800"
+        role="dialog" aria-modal="true"
+      >
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-extrabold">Paint Types</h3>
+            <div class="flex items-center gap-3">
+              <input
+                v-model="ptSearch"
+                type="text"
+                class="w-72 rounded-md border border-gray-300 p-3"
+                placeholder="Search paint types…"
+              />
+              <button @click="closePaintTypes" class="text-sm px-3 py-2 rounded bg-gray-100 hover:bg-gray-200">Close</button>
+            </div>
+          </div>
+
+          <!-- form -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div class="md:col-span-2">
+              <label class="text-sm font-medium">Name</label>
+              <input v-model="ptForm.name" type="text" class="w-full mt-1 rounded-md border border-gray-300 p-3" placeholder="e.g. Emulsion Paint" />
+              <p v-if="ptForm.errors.name" class="text-red-500 text-sm mt-1">{{ ptForm.errors.name }}</p>
+            </div>
+
+            <div class="md:col-span-1 flex gap-3">
+              <button v-if="!ptEditingId" @click="createPaintType" :disabled="ptForm.processing" class="px-5 py-2 rounded bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-60">
+                Add
+              </button>
+              <button v-else @click="updatePaintType" :disabled="ptForm.processing" class="px-5 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60">
+                Update
+              </button>
+              <button v-if="ptEditingId" @click="resetPtEdit" class="px-5 py-2 rounded bg-gray-200 hover:bg-gray-100">
+                Cancel Edit
+              </button>
+            </div>
+          </div>
+
+          <!-- list -->
+          <div class="mt-6 overflow-x-auto rounded-lg shadow">
+            <table class="min-w-full">
+              <thead>
+                <tr class="bg-gradient-to-r from-blue-500 to-blue-600 text-white uppercase tracking-wide">
+                  <th class="px-6 py-4 text-left text-base font-semibold">#</th>
+                  <th class="px-6 py-4 text-left text-base font-semibold">Name</th>
+                  <th class="px-6 py-4 text-right text-base font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr v-for="(row, i) in filteredPaintTypes" :key="row.id">
+                  <td class="px-6 py-4 text-base">{{ i + 1 }}</td>
+                  <td class="px-6 py-4 text-base font-medium">{{ row.name }}</td>
+                  <td class="px-6 py-4">
+                    <div class="flex justify-end gap-2">
+                      <button @click="startPtEdit(row)" class="px-4 py-2 rounded-md text-white bg-emerald-500 hover:bg-emerald-600 text-sm">Edit</button>
+                      <button @click="removePaintType(row)" class="px-4 py-2 rounded-md text-white bg-red-500 hover:bg-red-600 text-sm">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="!filteredPaintTypes.length">
+                  <td colspan="3" class="px-6 py-8 text-center text-gray-500 text-base">No paint types found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </transition>
+
+  <!-- Color Cards CRUD modal (centered) -->
+  <transition name="fade">
+    <div v-if="isColorCardsOpen" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/50 z-0" @click="closeColorCards"></div>
+
+      <div
+        class="relative z-10 w-11/12 md:w-[1100px] max-h-[85vh] overflow-y-auto rounded-2xl
+               border-4 border-blue-500 bg-white text-gray-800"
+        role="dialog" aria-modal="true"
+      >
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-extrabold">Color Cards</h3>
+            <div class="flex items-center gap-3">
+              <input
+                v-model="ccSearch"
+                type="text"
+                class="w-72 rounded-md border border-gray-300 p-3"
+                placeholder="Search color cards…"
+              />
+              <button @click="closeColorCards" class="text-sm px-3 py-2 rounded bg-gray-100 hover:bg-gray-200">Close</button>
+            </div>
+          </div>
+
+          <!-- form -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div class="md:col-span-2">
+              <label class="text-sm font-medium">Name</label>
+              <input v-model="ccForm.name" type="text" class="w-full mt-1 rounded-md border border-gray-300 p-3" placeholder="e.g. RAL 9001" />
+              <p v-if="ccForm.errors.name" class="text-red-500 text-sm mt-1">{{ ccForm.errors.name }}</p>
+            </div>
+
+            <div class="md:col-span-1 flex gap-3">
+              <button v-if="!ccEditingId" @click="createColorCard" :disabled="ccForm.processing" class="px-5 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60">
+                Add
+              </button>
+              <button v-else @click="updateColorCard" :disabled="ccForm.processing" class="px-5 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60">
+                Update
+              </button>
+              <button v-if="ccEditingId" @click="resetCcEdit" class="px-5 py-2 rounded bg-gray-200 hover:bg-gray-100">
+                Cancel Edit
+              </button>
+            </div>
+          </div>
+
+          <!-- list -->
+          <div class="mt-6 overflow-x-auto rounded-lg shadow">
+            <table class="min-w-full">
+              <thead>
+                <tr class="bg-gradient-to-r from-blue-500 to-blue-600 text-white uppercase tracking-wide">
+                  <th class="px-6 py-4 text-left text-base font-semibold">#</th>
+                  <th class="px-6 py-4 text-left text-base font-semibold">Name</th>
+                  <th class="px-6 py-4 text-right text-base font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr v-for="(row, i) in filteredColorCards" :key="row.id">
+                  <td class="px-6 py-4 text-base">{{ i + 1 }}</td>
+                  <td class="px-6 py-4 text-base font-medium">{{ row.name }}</td>
+                  <td class="px-6 py-4">
+                    <div class="flex justify-end gap-2">
+                      <button @click="startCcEdit(row)" class="px-4 py-2 rounded-md text-white bg-emerald-500 hover:bg-emerald-600 text-sm">Edit</button>
+                      <button @click="removeColorCard(row)" class="px-4 py-2 rounded-md text-white bg-red-500 hover:bg-red-600 text-sm">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="!filteredColorCards.length">
+                  <td colspan="3" class="px-6 py-8 text-center text-gray-500 text-base">No color cards found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </transition>
+
+  <!-- Base Types CRUD modal (centered) -->
+  <transition name="fade">
+    <div v-if="isBaseTypesOpen" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/50 z-0" @click="closeBaseTypes"></div>
+
+      <div
+        class="relative z-10 w-11/12 md:w-[1100px] max-h-[85vh] overflow-y-auto rounded-2xl
+               border-4 border-green-500 bg-white text-gray-800"
+        role="dialog" aria-modal="true"
+      >
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-extrabold">Base Types</h3>
+            <div class="flex items-center gap-3">
+              <input
+                v-model="btSearch"
+                type="text"
+                class="w-72 rounded-md border border-gray-300 p-3"
+                placeholder="Search base types…"
+              />
+              <button @click="closeBaseTypes" class="text-sm px-3 py-2 rounded bg-gray-100 hover:bg-gray-200">Close</button>
+            </div>
+          </div>
+
+          <!-- form -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div class="md:col-span-2">
+              <label class="text-sm font-medium">Name</label>
+              <input v-model="btForm.name" type="text" class="w-full mt-1 rounded-md border border-gray-300 p-3" placeholder="e.g. Water Base" />
+              <p v-if="btForm.errors.name" class="text-red-500 text-sm mt-1">{{ btForm.errors.name }}</p>
+            </div>
+
+            <div class="md:col-span-1 flex gap-3">
+              <button v-if="!btEditingId" @click="createBaseType" :disabled="btForm.processing" class="px-5 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-60">
+                Add
+              </button>
+              <button v-else @click="updateBaseType" :disabled="btForm.processing" class="px-5 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60">
+                Update
+              </button>
+              <button v-if="btEditingId" @click="resetBtEdit" class="px-5 py-2 rounded bg-gray-200 hover:bg-gray-100">
+                Cancel Edit
+              </button>
+            </div>
+          </div>
+
+          <!-- list -->
+          <div class="mt-6 overflow-x-auto rounded-lg shadow">
+            <table class="min-w-full">
+              <thead>
+                <tr class="bg-gradient-to-r from-blue-500 to-blue-600 text-white uppercase tracking-wide">
+                  <th class="px-6 py-4 text-left text-base font-semibold">#</th>
+                  <th class="px-6 py-4 text-left text-base font-semibold">Name</th>
+                  <th class="px-6 py-4 text-right text-base font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-200">
+                <tr v-for="(row, i) in filteredBaseTypes" :key="row.id">
+                  <td class="px-6 py-4 text-base">{{ i + 1 }}</td>
+                  <td class="px-6 py-4 text-base font-medium">{{ row.name }}</td>
+                  <td class="px-6 py-4">
+                    <div class="flex justify-end gap-2">
+                      <button @click="startBtEdit(row)" class="px-4 py-2 rounded-md text-white bg-emerald-500 hover:bg-emerald-600 text-sm">Edit</button>
+                      <button @click="removeBaseType(row)" class="px-4 py-2 rounded-md text-white bg-red-500 hover:bg-red-600 text-sm">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="!filteredBaseTypes.length">
+                  <td colspan="3" class="px-6 py-8 text-center text-gray-500 text-base">No base types found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </transition>
 </template>
 
 <script setup>
@@ -388,6 +622,9 @@ const props = defineProps({
   coloranceStocks: { type: Array, default: () => [] },
   machineHistory:  { type: Array, default: () => [] },
   orders:          { type: Array, default: () => [] }, // ok if unused here
+  paintTypes:      { type: Array, default: () => [] },
+  colorCards:      { type: Array, default: () => [] },
+  baseTypes:       { type: Array, default: () => [] },
 })
 
 /* ------------- Small “Add Name” modal ------------- */
@@ -505,6 +742,156 @@ const filteredHistory = computed(() => {
     return name.includes(q) || can.includes(q) || units.includes(q) || when.includes(q)
   })
 })
+
+/* ------------- Paint Types CRUD modal ------------- */
+const isPaintTypesOpen = ref(false)
+const ptForm = useForm({ name: '' })
+const ptEditingId = ref(null)
+
+const ptSearch = ref('')
+const filteredPaintTypes = computed(() => {
+  const q = ptSearch.value.trim().toLowerCase()
+  if (!q) return props.paintTypes
+  return props.paintTypes.filter(s =>
+    (s.name||'').toLowerCase().includes(q)
+  )
+})
+
+function openPaintTypes() { resetPtEdit(); isPaintTypesOpen.value = true }
+function closePaintTypes() { isPaintTypesOpen.value = false; resetPtEdit() }
+function resetPtEdit() { ptEditingId.value = null; ptForm.reset('name'); ptForm.clearErrors() }
+function startPtEdit(row) { ptEditingId.value = row.id; ptForm.name = row.name }
+function createPaintType() { 
+  ptForm.post(route('paints.types.store'), { 
+    preserveScroll: true, 
+    onSuccess: () => { 
+      router.reload({only: ['paintTypes']}); 
+      resetPtEdit(); 
+      isPaintTypesOpen.value = true; 
+    }
+  }) 
+}
+function updatePaintType() { 
+  if (!ptEditingId.value) return; 
+  ptForm.put(route('paints.types.update', ptEditingId.value), { 
+    preserveScroll: true, 
+    onSuccess: () => { 
+      router.reload({only: ['paintTypes']}); 
+      resetPtEdit(); 
+      isPaintTypesOpen.value = true; 
+    }
+  }) 
+}
+function removePaintType(row) { 
+  if (!confirm(`Delete "${row.name}"?`)) return; 
+  router.delete(route('paints.types.destroy', row.id), { 
+    preserveScroll: true, 
+    onSuccess: () => { 
+      router.reload({only: ['paintTypes']}); 
+      isPaintTypesOpen.value = true; 
+    }
+  }) 
+}
+
+/* ------------- Color Cards CRUD modal ------------- */
+const isColorCardsOpen = ref(false)
+const ccForm = useForm({ name: '' })
+const ccEditingId = ref(null)
+
+const ccSearch = ref('')
+const filteredColorCards = computed(() => {
+  const q = ccSearch.value.trim().toLowerCase()
+  if (!q) return props.colorCards
+  return props.colorCards.filter(s =>
+    (s.name||'').toLowerCase().includes(q)
+  )
+})
+
+function openColorCards() { resetCcEdit(); isColorCardsOpen.value = true }
+function closeColorCards() { isColorCardsOpen.value = false; resetCcEdit() }
+function resetCcEdit() { ccEditingId.value = null; ccForm.reset('name'); ccForm.clearErrors() }
+function startCcEdit(row) { ccEditingId.value = row.id; ccForm.name = row.name }
+function createColorCard() { 
+  ccForm.post(route('paints.color-cards.store'), { 
+    preserveScroll: true, 
+    onSuccess: () => { 
+      router.reload({only: ['colorCards']}); 
+      resetCcEdit(); 
+      isColorCardsOpen.value = true; 
+    }
+  }) 
+}
+function updateColorCard() { 
+  if (!ccEditingId.value) return; 
+  ccForm.put(route('paints.color-cards.update', ccEditingId.value), { 
+    preserveScroll: true, 
+    onSuccess: () => { 
+      router.reload({only: ['colorCards']}); 
+      resetCcEdit(); 
+      isColorCardsOpen.value = true; 
+    }
+  }) 
+}
+function removeColorCard(row) { 
+  if (!confirm(`Delete "${row.name}"?`)) return; 
+  router.delete(route('paints.color-cards.destroy', row.id), { 
+    preserveScroll: true, 
+    onSuccess: () => { 
+      router.reload({only: ['colorCards']}); 
+      isColorCardsOpen.value = true; 
+    }
+  }) 
+}
+
+/* ------------- Base Types CRUD modal ------------- */
+const isBaseTypesOpen = ref(false)
+const btForm = useForm({ name: '' })
+const btEditingId = ref(null)
+
+const btSearch = ref('')
+const filteredBaseTypes = computed(() => {
+  const q = btSearch.value.trim().toLowerCase()
+  if (!q) return props.baseTypes
+  return props.baseTypes.filter(s =>
+    (s.name||'').toLowerCase().includes(q)
+  )
+})
+
+function openBaseTypes() { resetBtEdit(); isBaseTypesOpen.value = true }
+function closeBaseTypes() { isBaseTypesOpen.value = false; resetBtEdit() }
+function resetBtEdit() { btEditingId.value = null; btForm.reset('name'); btForm.clearErrors() }
+function startBtEdit(row) { btEditingId.value = row.id; btForm.name = row.name }
+function createBaseType() { 
+  btForm.post(route('paints.base-types.store'), { 
+    preserveScroll: true, 
+    onSuccess: () => { 
+      router.reload({only: ['baseTypes']}); 
+      resetBtEdit(); 
+      isBaseTypesOpen.value = true; 
+    }
+  }) 
+}
+function updateBaseType() { 
+  if (!btEditingId.value) return; 
+  btForm.put(route('paints.base-types.update', btEditingId.value), { 
+    preserveScroll: true, 
+    onSuccess: () => { 
+      router.reload({only: ['baseTypes']}); 
+      resetBtEdit(); 
+      isBaseTypesOpen.value = true; 
+    }
+  }) 
+}
+function removeBaseType(row) { 
+  if (!confirm(`Delete "${row.name}"?`)) return; 
+  router.delete(route('paints.base-types.destroy', row.id), { 
+    preserveScroll: true, 
+    onSuccess: () => { 
+      router.reload({only: ['baseTypes']}); 
+      isBaseTypesOpen.value = true; 
+    }
+  }) 
+}
 </script>
 
 <style scoped>

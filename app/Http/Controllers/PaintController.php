@@ -19,6 +19,9 @@ class PaintController extends Controller
             'machineHistory' => MachineStock::with(['colorance:id,name,can_size'])
                 ->latest()->take(25)
                 ->get(['id', 'colorance_stock_id', 'units', 'created_at']),
+            'paintTypes' => \App\Models\PaintProduct::orderBy('name')->get(['id', 'name']),
+            'colorCards' => \App\Models\ColorCard::orderBy('name')->get(['id', 'name']),
+            'baseTypes' => \App\Models\BaseType::orderBy('name')->get(['id', 'name']),
         ]);
     }
 

@@ -15,7 +15,7 @@
           <button
             type="button"
             @click="openOrderModal"
-            class="px-5 py-3 rounded-md bg-sky-600 text-white hover:bg-sky-700"
+            class="px-5 py-3 rounded-md bg-sky-600 text-white hover:bg-sky-700 transition-colors"
           >
             New Order
           </button>

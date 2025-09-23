@@ -16,6 +16,8 @@ use App\Models\PaintProduct;
 use App\Models\ColorCard;
 use App\Models\BaseType;
 use App\Models\Report;
+use App\Models\BaseStock;
+use App\Models\BaseStockTransaction;
 
 // POS models
 use App\Models\Product;
@@ -247,6 +249,35 @@ class PaintOrderController extends Controller
                 ]);
 
                 $order->update(['status' => 'completed']);
+
+                // Reduce base stock when order is completed
+                try {
+                    $baseStock = BaseStock::where('paint_product_id', $order->paint_product_id)
+                        ->where('base_type_id', $order->base_type_id)
+                        ->where('can_size', $order->can_size)
+                        ->first();
+
+                    if ($baseStock) {
+                        $userName = optional(Auth::user())->name ?? 'System';
+                        $notes = "Order #" . $order->id . " completed - " . optional($order->paintProduct)->name . 
+                                " (" . optional($order->colorCard)->name . ", " . $order->can_size . ")";
+                        
+                        $baseStock->reduceStock($qty, $order->id, $notes, $userName);
+                    } else {
+                        Log::warning('No matching base stock found for paint order', [
+                            'order_id' => $order->id,
+                            'paint_product_id' => $order->paint_product_id,
+                            'base_type_id' => $order->base_type_id,
+                            'can_size' => $order->can_size,
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Failed to reduce base stock for paint order', [
+                        'order_id' => $order->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                    // Continue with order completion even if base stock reduction fails
+                }
 
                 // Create paint order report entry
                 Report::create([

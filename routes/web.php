@@ -18,6 +18,7 @@ use App\Http\Controllers\ColorCardController;
 use App\Http\Controllers\PaintProductController;
 use App\Http\Controllers\ColoranceStockController;
 use App\Http\Controllers\MachineRefillController;
+use App\Http\Controllers\BaseStockController;
 use App\Http\Controllers\PaintOrderController;
 
 
@@ -169,6 +170,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // routes/web.php
     Route::post('/paints/orders/{order}/pay', [PaintOrderController::class, 'pay'])
         ->name('paints.orders.pay');
+
+    // Base Stock Management Routes
+    Route::prefix('base-stocks')->name('base-stocks.')->group(function () {
+        Route::get('/', [BaseStockController::class, 'index'])->name('index');
+        Route::post('/', [BaseStockController::class, 'store'])->name('store');
+        Route::put('/{baseStock}', [BaseStockController::class, 'update'])->name('update');
+        Route::delete('/{baseStock}', [BaseStockController::class, 'destroy'])->name('destroy');
+        Route::get('/dropdown-data', [BaseStockController::class, 'getDropdownData'])->name('dropdown-data');
+        Route::get('/transactions', [BaseStockController::class, 'getTransactions'])->name('transactions');
+        Route::get('/transactions/download-pdf', [BaseStockController::class, 'downloadTransactionsPDF'])->name('transactions.download-pdf');
+    });
 
 
 

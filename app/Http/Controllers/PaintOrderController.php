@@ -123,6 +123,22 @@ class PaintOrderController extends Controller
             'status'        => ['nullable','in:pending,completed'],
         ]);
 
+        // ✅ CHECK BASE STOCK AVAILABILITY BEFORE CREATING ORDER
+        $requestedQuantity = $data['quantity'] ?? 1;
+        $baseStock = BaseStock::where('paint_product_id', $data['paint_type_id'])
+                             ->where('base_type_id', $data['base_type_id'])
+                             ->where('can_size', $data['can_size'])
+                             ->first();
+
+        if (!$baseStock || $baseStock->quantity < $requestedQuantity) {
+            $availableQuantity = $baseStock ? $baseStock->quantity : 0;
+            
+            // Return validation error to prevent order creation
+            return redirect()->back()
+                           ->withErrors(['stock_error' => "Insufficient base stock. Requested: {$requestedQuantity}, Available: {$availableQuantity}"])
+                           ->withInput();
+        }
+
         // find/create customer
         $customer = null;
         if (!empty($data['email'])) {

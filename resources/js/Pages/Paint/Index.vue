@@ -1035,10 +1035,114 @@
       </div>
     </div>
   </transition>
+
+  <!-- ===================================================== -->
+  <!-- Enhanced Alert Modal (replaces window.alert visually) -->
+  <!-- ===================================================== -->
+  <transition name="fade">
+    <div v-if="centerAlert.open" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/50" @click="closeCenterAlert"></div>
+      <div
+        class="relative z-10 w-full max-w-md rounded-2xl bg-white border-4 shadow-[0_25px_50px_rgba(0,0,0,.5)]"
+        :class="centerAlert.type === 'success' ? 'border-emerald-500' : centerAlert.type === 'error' ? 'border-red-500' : centerAlert.type === 'warning' ? 'border-amber-500' : 'border-blue-500'"
+        role="dialog" aria-modal="true"
+      >
+        <div class="p-6">
+          <div class="flex items-start gap-4">
+            <!-- Icon based on alert type -->
+            <div class="flex-shrink-0">
+              <svg v-if="centerAlert.type === 'success'" class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <svg v-else-if="centerAlert.type === 'error'" class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <svg v-else-if="centerAlert.type === 'warning'" class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+              <svg v-else class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-bold text-gray-900 mb-2"
+                  :class="centerAlert.type === 'success' ? 'text-emerald-700' : centerAlert.type === 'error' ? 'text-red-700' : centerAlert.type === 'warning' ? 'text-amber-700' : 'text-blue-700'">
+                {{ centerAlert.title }}
+              </h3>
+              <div class="text-sm text-gray-700 leading-relaxed" v-html="centerAlert.safeHtml"></div>
+            </div>
+          </div>
+          
+          <div class="mt-6 flex justify-end gap-3">
+            <button
+              @click="closeCenterAlert"
+              class="px-6 py-3 rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+              :class="centerAlert.type === 'success' 
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500' 
+                : centerAlert.type === 'error' 
+                ? 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500' 
+                : centerAlert.type === 'warning'
+                ? 'bg-amber-600 hover:bg-amber-700 text-white focus:ring-amber-500'
+                : 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500'"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </transition>
+
+  <!-- ===================================================== -->
+  <!-- Custom Confirm Dialog (replaces window.confirm)     -->
+  <!-- ===================================================== -->
+  <transition name="fade">
+    <div v-if="confirmDialog.open" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/50" @click="cancelConfirm"></div>
+      <div
+        class="relative z-10 w-full max-w-md rounded-2xl bg-white border-4 border-amber-500 shadow-[0_25px_50px_rgba(0,0,0,.5)]"
+        role="dialog" aria-modal="true"
+      >
+        <div class="p-6">
+          <div class="flex items-start gap-4">
+            <!-- Warning Icon -->
+            <div class="flex-shrink-0">
+              <svg class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+            
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-bold text-amber-700 mb-2">
+                Confirm Action
+              </h3>
+              <div class="text-sm text-gray-700 leading-relaxed" v-html="confirmDialog.safeHtml"></div>
+            </div>
+          </div>
+          
+          <div class="mt-6 flex justify-end gap-3">
+            <button
+              @click="cancelConfirm"
+              class="px-6 py-3 rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gray-200 hover:bg-gray-300 text-gray-800 focus:ring-gray-400"
+            >
+              Cancel
+            </button>
+            <button
+              @click="acceptConfirm"
+              class="px-6 py-3 rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 bg-red-600 hover:bg-red-700 text-white focus:ring-red-500"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </transition>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, reactive } from 'vue'
 import { Head, Link, useForm, router } from '@inertiajs/vue3'
 import Header from '@/Components/custom/Header.vue'
 import Footer from '@/Components/custom/Footer.vue'
@@ -1135,7 +1239,7 @@ function resetEdit(){ editingId.value=null; cForm.reset('name','can_size','unit'
 function startEdit(row){ editingId.value=row.id; cForm.name=row.name; cForm.can_size=row.can_size; cForm.unit=row.unit }
 function createColorance(){ cForm.post(route('paints.colorance-stocks.store'), { preserveScroll:true, onSuccess:()=>{ router.reload({only:['coloranceStocks']}); resetEdit(); isColoranceOpen.value=true; }}) }
 function updateColorance(){ if(!editingId.value) return; cForm.put(route('paints.colorance-stocks.update', editingId.value), { preserveScroll:true, onSuccess:()=>{ router.reload({only:['coloranceStocks']}); resetEdit(); isColoranceOpen.value=true; }}) }
-function removeColorance(row){ if(!confirm(`Delete "${row.name}" (${row.can_size})?`)) return; router.delete(route('paints.colorance-stocks.destroy', row.id), { preserveScroll:true, onSuccess:()=>{ router.reload({only:['coloranceStocks']}); isColoranceOpen.value=true; }}) }
+function removeColorance(row){ showConfirm(`Delete "${row.name}" (${row.can_size})?`).then(confirmed => { if(confirmed) router.delete(route('paints.colorance-stocks.destroy', row.id), { preserveScroll:true, onSuccess:()=>{ router.reload({only:['coloranceStocks']}); isColoranceOpen.value=true; }}) }) }
 
 /* ------------- Mixing (Machine Refill) popup ------------- */
 const isMixOpen = ref(false)
@@ -1254,14 +1358,17 @@ function updatePaintType() {
   }) 
 }
 function removePaintType(row) { 
-  if (!confirm(`Delete "${row.name}"?`)) return; 
-  router.delete(route('paints.types.destroy', row.id), { 
-    preserveScroll: true, 
-    onSuccess: () => { 
-      router.reload({only: ['paintTypes']}); 
-      isPaintTypesOpen.value = true; 
+  showConfirm(`Delete "${row.name}"?`).then(confirmed => {
+    if (confirmed) {
+      router.delete(route('paints.types.destroy', row.id), { 
+        preserveScroll: true, 
+        onSuccess: () => { 
+          router.reload({only: ['paintTypes']}); 
+          isPaintTypesOpen.value = true; 
+        }
+      })
     }
-  }) 
+  })
 }
 
 /* ------------- Color Cards CRUD modal ------------- */
@@ -1304,14 +1411,17 @@ function updateColorCard() {
   }) 
 }
 function removeColorCard(row) { 
-  if (!confirm(`Delete "${row.name}"?`)) return; 
-  router.delete(route('paints.color-cards.destroy', row.id), { 
-    preserveScroll: true, 
-    onSuccess: () => { 
-      router.reload({only: ['colorCards']}); 
-      isColorCardsOpen.value = true; 
+  showConfirm(`Delete "${row.name}"?`).then(confirmed => {
+    if (confirmed) {
+      router.delete(route('paints.color-cards.destroy', row.id), { 
+        preserveScroll: true, 
+        onSuccess: () => { 
+          router.reload({only: ['colorCards']}); 
+          isColorCardsOpen.value = true; 
+        }
+      })
     }
-  }) 
+  })
 }
 
 /* ------------- Base Types CRUD modal ------------- */
@@ -1354,14 +1464,125 @@ function updateBaseType() {
   }) 
 }
 function removeBaseType(row) { 
-  if (!confirm(`Delete "${row.name}"?`)) return; 
-  router.delete(route('paints.base-types.destroy', row.id), { 
-    preserveScroll: true, 
-    onSuccess: () => { 
-      router.reload({only: ['baseTypes']}); 
-      isBaseTypesOpen.value = true; 
+  showConfirm(`Delete "${row.name}"?`).then(confirmed => {
+    if (confirmed) {
+      router.delete(route('paints.base-types.destroy', row.id), { 
+        preserveScroll: true, 
+        onSuccess: () => { 
+          router.reload({only: ['baseTypes']}); 
+          isBaseTypesOpen.value = true; 
+        }
+      })
     }
-  }) 
+  })
+}
+
+/* --------------------------- */
+/* Enhanced alert replacement  */
+/* --------------------------- */
+const centerAlert = reactive({
+  open: false,
+  message: '',
+  safeHtml: '',
+  type: 'info', // 'success', 'error', 'warning', 'info'
+  title: 'Alert',
+})
+
+/* --------------------------- */
+/* Custom confirm dialog       */
+/* --------------------------- */
+const confirmDialog = reactive({
+  open: false,
+  message: '',
+  safeHtml: '',
+  resolve: null,
+})
+
+let _origAlert = null
+let _origConfirm = null
+
+function toSafeHtml(text) {
+  const esc = String(text ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+  }[c]))
+  return esc.replace(/\n/g, '<br>')
+}
+
+function closeCenterAlert() {
+  centerAlert.open = false
+}
+
+function cancelConfirm() {
+  confirmDialog.open = false
+  if (confirmDialog.resolve) {
+    confirmDialog.resolve(false)
+    confirmDialog.resolve = null
+  }
+}
+
+function acceptConfirm() {
+  confirmDialog.open = false
+  if (confirmDialog.resolve) {
+    confirmDialog.resolve(true)
+    confirmDialog.resolve = null
+  }
+}
+
+// Enhanced alert function that can determine type from message content
+function showAlert(message, type = null) {
+  const msg = String(message ?? '')
+  centerAlert.message = msg
+  centerAlert.safeHtml = toSafeHtml(msg)
+  
+  // Auto-detect type if not provided
+  if (!type) {
+    if (msg.includes('✅') || msg.toLowerCase().includes('success')) {
+      centerAlert.type = 'success'
+      centerAlert.title = 'Success'
+    } else if (msg.includes('❌') || msg.toLowerCase().includes('error') || msg.toLowerCase().includes('failed')) {
+      centerAlert.type = 'error'
+      centerAlert.title = 'Error'
+    } else if (msg.includes('⚠️') || msg.toLowerCase().includes('warning') || msg.toLowerCase().includes('insufficient')) {
+      centerAlert.type = 'warning'
+      centerAlert.title = 'Warning'
+    } else {
+      centerAlert.type = 'info'
+      centerAlert.title = 'Information'
+    }
+  } else {
+    centerAlert.type = type
+    centerAlert.title = type.charAt(0).toUpperCase() + type.slice(1)
+  }
+  
+  centerAlert.open = true
+}
+
+// Custom confirm function that returns a Promise
+function showConfirm(message) {
+  return new Promise((resolve) => {
+    const msg = String(message ?? '')
+    confirmDialog.message = msg
+    confirmDialog.safeHtml = toSafeHtml(msg)
+    confirmDialog.resolve = resolve
+    confirmDialog.open = true
+  })
+}
+
+function keyHandler(e){
+  if (centerAlert.open) {
+    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      closeCenterAlert()
+    }
+  } else if (confirmDialog.open) {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      cancelConfirm()
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      acceptConfirm()
+    }
+  }
 }
 
 /* ------------- Base Stock Management ------------- */
@@ -1578,7 +1799,8 @@ function cancelEdit() {
 }
 
 async function deleteBaseStock(id) {
-  if (!confirm('Are you sure you want to delete this base stock item?')) return
+  const confirmed = await showConfirm('Are you sure you want to delete this base stock item?')
+  if (!confirmed) return
   
   try {
     baseStock.value.processing = true
@@ -1697,9 +1919,30 @@ watch(() => baseStock.value.activeTab, (newTab) => {
     loadTransactionHistory()
   }
 })
+
+// Setup enhanced alert system
+onMounted(() => {
+  // Save originals, then override window.alert and window.confirm
+  _origAlert = window.alert
+  _origConfirm = window.confirm
+  window.alert = showAlert
+  window.confirm = showConfirm
+  window.addEventListener('keydown', keyHandler)
+})
+
+onBeforeUnmount(() => {
+  if (_origAlert) window.alert = _origAlert
+  if (_origConfirm) window.confirm = _origConfirm
+  window.removeEventListener('keydown', keyHandler)
+})
 </script>
 
 <style scoped>
-.fade-enter-active, .fade-leave-active { transition: opacity .15s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.fade-enter-active, .fade-leave-active { 
+  transition: all .25s ease; 
+}
+.fade-enter-from, .fade-leave-to { 
+  opacity: 0; 
+  transform: scale(0.95);
+}
 </style>

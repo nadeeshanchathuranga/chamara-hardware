@@ -557,11 +557,69 @@
     :kokoSurcharge="print.kokoSurcharge || '0'"
     :companyInfo="null"
   />
+
+  <!-- ===================================================== -->
+  <!-- Centered Alert Modal (replaces window.alert visually) -->
+  <!-- ===================================================== -->
+  <transition name="fade">
+    <div v-if="centerAlert.open" class="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/50" @click="closeCenterAlert"></div>
+      <div
+        class="relative z-10 w-full max-w-md rounded-2xl bg-white border-4 shadow-[0_25px_50px_rgba(0,0,0,.5)]"
+        :class="centerAlert.type === 'success' ? 'border-emerald-500' : centerAlert.type === 'error' ? 'border-red-500' : 'border-blue-500'"
+        role="dialog" aria-modal="true"
+      >
+        <div class="p-6">
+          <div class="flex items-start gap-4">
+            <!-- Icon based on alert type -->
+            <div class="flex-shrink-0">
+              <svg v-if="centerAlert.type === 'success'" class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <svg v-else-if="centerAlert.type === 'error'" class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <svg v-else-if="centerAlert.type === 'warning'" class="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+              <svg v-else class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            
+            <div class="flex-1 min-w-0">
+              <h3 class="text-lg font-bold text-gray-900 mb-2"
+                  :class="centerAlert.type === 'success' ? 'text-emerald-700' : centerAlert.type === 'error' ? 'text-red-700' : centerAlert.type === 'warning' ? 'text-amber-700' : 'text-blue-700'">
+                {{ centerAlert.title }}
+              </h3>
+              <div class="text-sm text-gray-700 leading-relaxed" v-html="centerAlert.safeHtml"></div>
+            </div>
+          </div>
+          
+          <div class="mt-6 flex justify-end gap-3">
+            <button
+              @click="closeCenterAlert"
+              class="px-6 py-3 rounded-lg font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2"
+              :class="centerAlert.type === 'success' 
+                ? 'bg-emerald-600 hover:bg-emerald-700 text-white focus:ring-emerald-500' 
+                : centerAlert.type === 'error' 
+                ? 'bg-red-600 hover:bg-red-700 text-white focus:ring-red-500' 
+                : centerAlert.type === 'warning'
+                ? 'bg-amber-600 hover:bg-amber-700 text-white focus:ring-amber-500'
+                : 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500'"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </transition>
 </template>
 
 <script setup>
 import { Head, Link, useForm, router } from '@inertiajs/vue3'
-import { ref, watch, reactive, computed, onMounted, nextTick } from 'vue'
+import { ref, watch, reactive, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import axios from 'axios'
 import Header from '@/Components/custom/Header.vue'
 import Footer from '@/Components/custom/Footer.vue'
@@ -596,20 +654,13 @@ const debouncedSearch = () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
     performSearch()
-  }, 500) // 500ms delay
+  }, 500)
 }
 
 const performSearch = () => {
   const params = {}
-  
-  if (searchForm.search.trim()) {
-    params.search = searchForm.search.trim()
-  }
-  
-  if (searchForm.status) {
-    params.status = searchForm.status
-  }
-  
+  if (searchForm.search.trim()) params.search = searchForm.search.trim()
+  if (searchForm.status) params.status = searchForm.status
   router.get(route('paints.orders.index'), params, {
     preserveState: true,
     preserveScroll: true,
@@ -675,7 +726,32 @@ watch(selectedCustomerId, (id) => {
 function submitOrder () {
   orderForm.post(route('paints.orders.store'), {
     preserveScroll: true,
+    onError: (errors) => {
+      if (errors.stock_error) {
+        const errorMsg = errors.stock_error;
+        const requestedMatch = errorMsg.match(/Requested: (\d+)/);
+        const availableMatch = errorMsg.match(/Available: (\d+)/);
+        if (requestedMatch && availableMatch) {
+          const requested = requestedMatch[1];
+          const available = availableMatch[1];
+          alert(
+            `⚠️ INSUFFICIENT STOCK\n\n` +
+            `You requested: ${requested} units\n` +
+            `Available stock: ${available} units\n\n` +
+            `Please reduce the quantity to ${available} or less.`
+          );
+        } else {
+          alert('❌ ' + errorMsg);
+        }
+      } else {
+        const errorMessages = Object.values(errors).flat();
+        if (errorMessages.length > 0) {
+          alert('❌ Please fix the following errors:\n\n' + errorMessages.join('\n'));
+        }
+      }
+    },
     onSuccess: () => {
+      alert('✅ Order created successfully!');
       router.reload({ only: ['orders'] })
       orderForm.reset(
         'customer_name','phone','email',
@@ -684,7 +760,7 @@ function submitOrder () {
         'can_size','quantity','unit_price'
       )
       selectedCustomerId.value = ''
-      isOrderOpen.value = true
+      isOrderOpen.value = false
     },
   })
 }
@@ -719,27 +795,20 @@ const payBalance = computed(() =>
   Number(pay.cash || 0) - payTotal.value
 )
 
-// Watch for payment method changes and update cash accordingly
 watch(() => pay.method, (newMethod) => {
   if (newMethod === 'Cash') {
-    // For cash payments, set cash to total amount (including any surcharge)
     pay.cash = payTotal.value
   } else {
-    // For Card/Koko payments, cash is not needed
     pay.cash = 0
   }
 })
 
 function openPaymentModal(o){
-  // Open payment modal with order data pre-filled
   pay.selectedOrder = o
-  // ✅ Lock quantity to the order's quantity
   pay.quantity = Number(o.quantity ?? 1)
-  pay.unit_cost = Number(o.unit_price ?? 0)        // cost from order
-  pay.selling_price = Number(o.unit_price ?? 0)    // default selling = cost (editable)
+  pay.unit_cost = Number(o.unit_price ?? 0)
+  pay.selling_price = Number(o.unit_price ?? 0)
   pay.method = 'Cash'
-  
-  // Set cash to subtotal initially (before any surcharge)
   nextTick(() => {
     pay.cash = paySubtotal.value
   })
@@ -772,34 +841,26 @@ async function confirmPayment(){
 
   pay.processing = true
   try {
-    // ✅ Always use the original order quantity on the server
     const qtyUsed = Number(pay.selectedOrder.quantity ?? 1)
-    
-    // For non-cash payments, send the total amount as cash for backend processing
     const cashAmount = pay.method === 'Cash' ? pay.cash : payTotal.value
 
     await axios.post(route('paints.orders.pay', pay.selectedOrder.id), {
-      quantity: qtyUsed,                 // locked
+      quantity: qtyUsed,
       selling_price: pay.selling_price,
       cash: cashAmount,
       payment_method: pay.method,
     })
 
-    // ✅ Prepare print data WITH product name for bill printing (no code)
     const productParts = []
-    
-    // Add product name if available
     if (pay.selectedOrder.product_name) {
       productParts.push(pay.selectedOrder.product_name)
     }
-    
-    // Add paint product name and can size
     productParts.push(`${pay.selectedOrder.paint_product?.name || 'Paint'} / ${pay.selectedOrder.can_size}`)
     
     print.products = [{
       id: 'PAINT',
       name: productParts.join(' - '),
-      selling_price: Number(pay.selling_price),      // shown as line price
+      selling_price: Number(pay.selling_price),
       quantity: qtyUsed,
       discounted_price: Number(pay.selling_price),
       apply_discount: false,
@@ -821,10 +882,7 @@ async function confirmPayment(){
     print.kokoSurcharge = pay.method === 'Koko' ? kokoSurcharge.value.toFixed(2) : '0'
     print.open = true
 
-    // hide cash panel immediately
     cancelPayment()
-
-    // refresh order list (status -> completed)
     router.reload({ only: ['orders'] })
   } catch (e) {
     const msg = e?.response?.data?.message || e?.message || 'Payment failed.'
@@ -835,119 +893,145 @@ async function confirmPayment(){
     pay.processing = false
   }
 }
+
+/* --------------------------- */
+/* Centered alert replacement  */
+/* --------------------------- */
+const centerAlert = reactive({
+  open: false,
+  message: '',
+  safeHtml: '',
+  type: 'info', // 'success', 'error', 'warning', 'info'
+  title: 'Alert',
+})
+let _origAlert = null
+
+function toSafeHtml(text) {
+  const esc = String(text ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+  }[c]))
+  return esc.replace(/\n/g, '<br>')
+}
+
+function closeCenterAlert() {
+  centerAlert.open = false
+}
+
+// Enhanced alert function that can determine type from message content
+function showAlert(message, type = null) {
+  const msg = String(message ?? '')
+  centerAlert.message = msg
+  centerAlert.safeHtml = toSafeHtml(msg)
+  
+  // Auto-detect type if not provided
+  if (!type) {
+    if (msg.includes('✅') || msg.toLowerCase().includes('success')) {
+      centerAlert.type = 'success'
+      centerAlert.title = 'Success'
+    } else if (msg.includes('❌') || msg.toLowerCase().includes('error') || msg.toLowerCase().includes('failed')) {
+      centerAlert.type = 'error'
+      centerAlert.title = 'Error'
+    } else if (msg.includes('⚠️') || msg.toLowerCase().includes('warning') || msg.toLowerCase().includes('insufficient')) {
+      centerAlert.type = 'warning'
+      centerAlert.title = 'Warning'
+    } else {
+      centerAlert.type = 'info'
+      centerAlert.title = 'Information'
+    }
+  } else {
+    centerAlert.type = type
+    centerAlert.title = type.charAt(0).toUpperCase() + type.slice(1)
+  }
+  
+  centerAlert.open = true
+}
+
+function keyHandler(e){
+  if (!centerAlert.open) return
+  if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault()
+    closeCenterAlert()
+  }
+}
+
+onMounted(() => {
+  // Save original, then override window.alert
+  _origAlert = window.alert
+  window.alert = showAlert
+  window.addEventListener('keydown', keyHandler)
+})
+
+onBeforeUnmount(() => {
+  if (_origAlert) window.alert = _origAlert
+  window.removeEventListener('keydown', keyHandler)
+})
 </script>
 
 <style scoped>
-.fade-enter-active, .fade-leave-active { transition: opacity .15s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
+.fade-enter-active, .fade-leave-active { 
+  transition: all .25s ease; 
+}
+.fade-enter-from, .fade-leave-to { 
+  opacity: 0; 
+  transform: scale(0.95);
+}
 
 /* Hide scrollbars completely */
-.no-scrollbar {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-}
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none; /* WebKit browsers */
-}
-
-/* Responsive table that fits all screen sizes */
-.responsive-table {
-  table-layout: fixed; /* Use fixed layout for better control */
-  width: 100%;
-}
-
+/* Responsive table */
+.responsive-table { table-layout: fixed; width: 100%; }
 .responsive-table th,
 .responsive-table td {
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 0.5rem 0.25rem; /* Compact padding */
-  font-size: 0.75rem; /* Smaller text for better fit */
+  padding: 0.5rem 0.25rem;
+  font-size: 0.75rem;
   line-height: 1.2;
 }
 
-/* Specific column width optimizations for laptop screens */
 .responsive-table th:nth-child(1),
-.responsive-table td:nth-child(1) { width: 5%; } /* Order ID */
-
+.responsive-table td:nth-child(1) { width: 5%; }
 .responsive-table th:nth-child(2),
-.responsive-table td:nth-child(2) { width: 12%; } /* Customer */
-
+.responsive-table td:nth-child(2) { width: 12%; }
 .responsive-table th:nth-child(3),
-.responsive-table td:nth-child(3) { width: 10%; } /* Paint Product */
-
+.responsive-table td:nth-child(3) { width: 10%; }
 .responsive-table th:nth-child(4),
-.responsive-table td:nth-child(4) { width: 10%; } /* Color Card */
-
+.responsive-table td:nth-child(4) { width: 10%; }
 .responsive-table th:nth-child(5),
-.responsive-table td:nth-child(5) { width: 8%; } /* Base Type */
-
+.responsive-table td:nth-child(5) { width: 8%; }
 .responsive-table th:nth-child(6),
-.responsive-table td:nth-child(6) { width: 10%; } /* Product Name */
-
+.responsive-table td:nth-child(6) { width: 10%; }
 .responsive-table th:nth-child(7),
-.responsive-table td:nth-child(7) { width: 8%; } /* Product Code */
-
+.responsive-table td:nth-child(7) { width: 8%; }
 .responsive-table th:nth-child(8),
-.responsive-table td:nth-child(8) { width: 7%; } /* Can Size */
-
+.responsive-table td:nth-child(8) { width: 7%; }
 .responsive-table th:nth-child(9),
-.responsive-table td:nth-child(9) { width: 4%; } /* Qty */
-
+.responsive-table td:nth-child(9) { width: 4%; }
 .responsive-table th:nth-child(10),
-.responsive-table td:nth-child(10) { width: 8%; } /* Unit Cost */
-
+.responsive-table td:nth-child(10) { width: 8%; }
 .responsive-table th:nth-child(11),
-.responsive-table td:nth-child(11) { width: 7%; } /* Status */
-
+.responsive-table td:nth-child(11) { width: 7%; }
 .responsive-table th:nth-child(12),
-.responsive-table td:nth-child(12) { width: 10%; } /* Created */
-
+.responsive-table td:nth-child(12) { width: 10%; }
 .responsive-table th:nth-child(13),
-.responsive-table td:nth-child(13) { width: 6%; } /* Actions */
+.responsive-table td:nth-child(13) { width: 6%; }
 
 /* Custom scrollbar styles */
-.scrollbar-thin {
-  scrollbar-width: thin;
-}
+.scrollbar-thin { scrollbar-width: thin; }
+.scrollbar-thin::-webkit-scrollbar { height: 8px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-.scrollbar-thin::-webkit-scrollbar {
-  height: 8px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
-}
-
-.scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-/* Table responsive container */
-.table-container {
-  position: relative;
-}
-
+.table-container { position: relative; }
 .table-container::after {
   content: '';
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 20px;
+  top: 0; right: 0; bottom: 0; width: 20px;
   background: linear-gradient(to left, rgba(255,255,255,1), rgba(255,255,255,0));
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  pointer-events: none; opacity: 0; transition: opacity 0.3s ease;
 }
-
-.table-container:hover::after {
-  opacity: 1;
-}
+.table-container:hover::after { opacity: 1; }
 </style>

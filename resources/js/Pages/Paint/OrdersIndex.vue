@@ -262,16 +262,19 @@
               <h4 class="text-lg font-bold mb-4 text-emerald-700">Payment Information</h4>
               
               <div class="space-y-4">
-                <!-- ✅ Quantity is locked (disabled) -->
+                <!-- Quantity can be changed during payment -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700">Quantity *</label>
+                  <label class="block text-sm font-medium text-gray-700">
+                    Quantity *
+                    <span class="text-xs text-gray-500 font-normal">(Original: {{ pay.selectedOrder.quantity ?? 1 }})</span>
+                  </label>
                   <input
                     type="number" min="1" step="1"
                     v-model.number="pay.quantity"
-                    disabled
-                    class="mt-1 w-full rounded-md border border-gray-300 p-3 bg-gray-100 text-gray-700 cursor-not-allowed"
-                    title="Quantity is fixed for payment"
+                    class="mt-1 w-full rounded-md border border-gray-300 p-3 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    title="Enter the quantity to be paid for"
                   />
+                  <p class="mt-1 text-xs text-gray-500">You can modify the quantity for partial or increased payment</p>
                 </div>
 
                 <div>
@@ -362,7 +365,7 @@
             </button>
             <button
               class="px-8 py-3 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 font-medium transition-colors"
-              :disabled="pay.processing || payTotal <= 0 || (pay.method === 'Cash' && payBalance < 0)"
+              :disabled="pay.processing || payTotal <= 0 || (pay.method === 'Cash' && payBalance < 0) || !pay.quantity || pay.quantity < 1"
               @click="confirmPayment"
             >
               <span v-if="pay.processing">Processing...</span>
@@ -803,6 +806,15 @@ watch(() => pay.method, (newMethod) => {
   }
 })
 
+// Auto-update cash amount when quantity or selling price changes (for Cash payments)
+watch([() => pay.quantity, () => pay.selling_price], () => {
+  if (pay.method === 'Cash') {
+    nextTick(() => {
+      pay.cash = payTotal.value
+    })
+  }
+})
+
 function openPaymentModal(o){
   pay.selectedOrder = o
   pay.quantity = Number(o.quantity ?? 1)
@@ -841,7 +853,7 @@ async function confirmPayment(){
 
   pay.processing = true
   try {
-    const qtyUsed = Number(pay.selectedOrder.quantity ?? 1)
+    const qtyUsed = Number(pay.quantity) // Use the quantity from the payment form (may be modified)
     const cashAmount = pay.method === 'Cash' ? pay.cash : payTotal.value
 
     await axios.post(route('paints.orders.pay', pay.selectedOrder.id), {

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use App\Models\Size;
 use App\Models\Color;
@@ -32,137 +32,136 @@ class ProductController extends Controller
     }
 
     public function fetchProducts(Request $request)
-    {
-        $query = $request->input('search');
-        $sortOrder = $request->input('sort');
-        $selectedColor = $request->input('color');
-        $selectedSize = $request->input('size');
-        $stockStatus = $request->input('stockStatus');
-        $selectedCategory = $request->input('selectedCategory');
+{
+    $rawQuery         = trim((string) $request->input('search', ''));
+    $sortOrder        = $request->input('sort');
+    $selectedColor    = $request->input('color');
+    $selectedSize     = $request->input('size');
+    $stockStatus      = $request->input('stockStatus');
+    $selectedCategory = $request->input('selectedCategory');
 
-        $productsQuery = Product::with('category', 'color', 'size', 'supplier')
-            ->when($query, function ($queryBuilder) use ($query) {
-                $queryBuilder->where(function ($subQuery) use ($query) {
-                    $subQuery->where('name', 'like', "{$query}%")
-                        ->orWhere('code', 'like', "{$query}%");
-                });
-            })
-            ->when($selectedColor, function ($queryBuilder) use ($selectedColor) {
-                $queryBuilder->whereHas('color', function ($colorQuery) use ($selectedColor) {
-                    $colorQuery->where('name', $selectedColor);
-                });
-            })
-            ->when($selectedSize, function ($queryBuilder) use ($selectedSize) {
-                $queryBuilder->whereHas('size', function ($sizeQuery) use ($selectedSize) {
-                    $sizeQuery->where('name', $selectedSize);
-                });
-            })
-            ->when(in_array($sortOrder, ['asc', 'desc']), function ($queryBuilder) use ($sortOrder) {
-                $queryBuilder->orderBy('selling_price', $sortOrder);
-            })
-            ->when($stockStatus, function ($queryBuilder) use ($stockStatus) {
-                if ($stockStatus === 'in') {
-                    $queryBuilder->where('stock_quantity', '>', 0);
-                } elseif ($stockStatus === 'out') {
-                    $queryBuilder->where('stock_quantity', '<=', 0);
-                }
-            })
-            ->when($selectedCategory, function ($queryBuilder) use ($selectedCategory) {
-                $queryBuilder->where('category_id', $selectedCategory);
+    // Normalize search: lower + remove spaces (so "10 ft" == "10ft")
+    $normalized = Str::of($rawQuery)->lower()->replace(' ', '')->toString();
+
+    $productsQuery = Product::with(['category', 'color', 'size', 'supplier'])
+        ->when($rawQuery !== '', function ($qb) use ($normalized) {
+            $qb->where(function ($sub) use ($normalized) {
+                // Compare with spaces removed, case-insensitive
+                $sub->whereRaw("REPLACE(LOWER(name), ' ', '') LIKE ?", ["%{$normalized}%"])
+                    ->orWhereRaw("REPLACE(LOWER(code), ' ', '') LIKE ?", ["%{$normalized}%"]);
             });
+        })
+        ->when($selectedColor, function ($qb) use ($selectedColor) {
+            $qb->whereHas('color', fn($q) => $q->where('name', $selectedColor));
+        })
+        ->when($selectedSize, function ($qb) use ($selectedSize) {
+            $qb->whereHas('size', fn($q) => $q->where('name', $selectedSize));
+        })
+        ->when(in_array($sortOrder, ['asc', 'desc'], true), function ($qb) use ($sortOrder) {
+            $qb->orderBy('selling_price', $sortOrder);
+        })
+        ->when($stockStatus, function ($qb) use ($stockStatus) {
+            if ($stockStatus === 'in') {
+                $qb->where('stock_quantity', '>', 0);
+            } elseif ($stockStatus === 'out') {
+                $qb->where('stock_quantity', '<=', 0);
+            }
+        })
+        ->when($selectedCategory, function ($qb) use ($selectedCategory) {
+            $qb->where('category_id', $selectedCategory);
+        });
 
-        // Order by name ascending when searching, otherwise by creation date
-        if ($query) {
-            $products = $productsQuery->orderBy('name', 'asc')->paginate(8);
-        } else {
-            $products = $productsQuery->orderBy('created_at', 'desc')->paginate(8);
-        }
+    // Order by name when searching, else by latest
+    $products = ($rawQuery !== '')
+        ? $productsQuery->orderBy('name', 'asc')->paginate(8)
+        : $productsQuery->orderBy('created_at', 'desc')->paginate(8);
 
-        return response()->json([
-            'products' => $products,
-        ]);
-    }
+    return response()->json([
+        'products' => $products,
+    ]);
+}
 
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
-    {
-        $query = $request->input('search');
-        $sortOrder = $request->input('sort');
-        $selectedColor = $request->input('color');
-        $selectedSize = $request->input('size');
-        $stockStatus = $request->input('stockStatus');
-        $selectedCategory = $request->input('selectedCategory');
+{
+    $query = $request->input('search');
+    $sortOrder = $request->input('sort');
+    $selectedColor = $request->input('color');
+    $selectedSize = $request->input('size');
+    $stockStatus = $request->input('stockStatus');
+    $selectedCategory = $request->input('selectedCategory');
 
+    $productsQuery = Product::with('category', 'color', 'size', 'supplier')
+        ->when($query, function ($queryBuilder) use ($query) {
+            $normalizedSearch = str_replace(' ', '', strtolower($query)); // remove spaces + lowercase
 
-        $productsQuery = Product::with('category', 'color', 'size', 'supplier')
-            ->when($query, function ($queryBuilder) use ($query) {
-                $queryBuilder->where(function ($subQuery) use ($query) {
-                    $subQuery->where('name', 'like', "{$query}%")
-                        ->orWhere('code', 'like', "{$query}%");
-                });
-            })
-            ->when($selectedColor, function ($queryBuilder) use ($selectedColor) {
-                $queryBuilder->whereHas('color', function ($colorQuery) use ($selectedColor) {
-                    $colorQuery->where('name', $selectedColor);
-                });
-            })
-            ->when($selectedSize, function ($queryBuilder) use ($selectedSize) {
-                $queryBuilder->whereHas('size', function ($sizeQuery) use ($selectedSize) {
-                    $sizeQuery->where('name', $selectedSize);
-                });
-            })
-            ->when(in_array($sortOrder, ['asc', 'desc']), function ($queryBuilder) use ($sortOrder) {
-                $queryBuilder->orderBy('selling_price', $sortOrder);
-            })
-            ->when($stockStatus, function ($queryBuilder) use ($stockStatus) {
-                if ($stockStatus === 'in') {
-                    $queryBuilder->where('stock_quantity', '>', 0); // In Stock
-                } elseif ($stockStatus === 'out') {
-                    $queryBuilder->where('stock_quantity', '<=', 0); // Out of Stock
-                }
-            })
-            ->when($selectedCategory, function ($queryBuilder) use ($selectedCategory) {
-                $queryBuilder->where('category_id', $selectedCategory); // Filter by category
+            $queryBuilder->where(function ($subQuery) use ($query, $normalizedSearch) {
+                $subQuery
+                    // normal LIKE (case-insensitive)
+                    ->whereRaw("LOWER(name) LIKE ?", ["%".strtolower($query)."%"])
+                    ->orWhereRaw("REPLACE(LOWER(name), ' ', '') LIKE ?", ["%".$normalizedSearch."%"])
+                    ->orWhereRaw("LOWER(code) LIKE ?", ["%".strtolower($query)."%"]);
             });
-
-
-        $count = $productsQuery->count();
-
-        // Order by name ascending when searching, otherwise by creation date
-        if ($query) {
-            $products = $productsQuery->orderBy('name', 'asc')->paginate(8);
-        } else {
-            $products = $productsQuery->orderBy('created_at', 'desc')->paginate(8);
-        }
-
-
-        // $allcategories = Category::with('parent')->get();
-        $allcategories = Category::with('parent')->get()->map(function ($category) {
-            $category->hierarchy_string = $category->hierarchy_string; // Access it
-            return $category;
+        })
+        ->when($selectedColor, function ($queryBuilder) use ($selectedColor) {
+            $queryBuilder->whereHas('color', function ($colorQuery) use ($selectedColor) {
+                $colorQuery->whereRaw("LOWER(name) = ?", [strtolower($selectedColor)]);
+            });
+        })
+        ->when($selectedSize, function ($queryBuilder) use ($selectedSize) {
+            $queryBuilder->whereHas('size', function ($sizeQuery) use ($selectedSize) {
+                $sizeQuery->whereRaw("LOWER(name) = ?", [strtolower($selectedSize)]);
+            });
+        })
+        ->when(in_array($sortOrder, ['asc', 'desc']), function ($queryBuilder) use ($sortOrder) {
+            $queryBuilder->orderBy('selling_price', $sortOrder);
+        })
+        ->when($stockStatus, function ($queryBuilder) use ($stockStatus) {
+            if ($stockStatus === 'in') {
+                $queryBuilder->where('stock_quantity', '>', 0); // In Stock
+            } elseif ($stockStatus === 'out') {
+                $queryBuilder->where('stock_quantity', '<=', 0); // Out of Stock
+            }
+        })
+        ->when($selectedCategory, function ($queryBuilder) use ($selectedCategory) {
+            $queryBuilder->where('category_id', $selectedCategory); // Filter by category
         });
-        $colors = Color::orderBy('created_at', 'desc')->get();
-        $sizes = Size::orderBy('created_at', 'desc')->get();
-        $suppliers = Supplier::orderBy('created_at', 'desc')->get();
 
+    $count = $productsQuery->count();
 
-        return Inertia::render('Products/Index', [
-            'products' => $products,
-            'allcategories' => $allcategories,
-            'colors' => $colors,
-            'sizes' => $sizes,
-            'suppliers' => $suppliers,
-            'totalProducts' => $count,
-            'search' => $query,
-            'sort' => $sortOrder,
-            'color' => $selectedColor,
-            'size' => $selectedSize,
-            'stockStatus' => $stockStatus,
-            'selectedCategory' => $selectedCategory
-        ]);
+    // Order by name ascending when searching, otherwise by creation date
+    if ($query) {
+        $products = $productsQuery->orderBy('name', 'asc')->paginate(8);
+    } else {
+        $products = $productsQuery->orderBy('created_at', 'desc')->paginate(8);
     }
+
+    $allcategories = Category::with('parent')->get()->map(function ($category) {
+        $category->hierarchy_string = $category->hierarchy_string; // Access it
+        return $category;
+    });
+    $colors = Color::orderBy('created_at', 'desc')->get();
+    $sizes = Size::orderBy('created_at', 'desc')->get();
+    $suppliers = Supplier::orderBy('created_at', 'desc')->get();
+
+    return Inertia::render('Products/Index', [
+        'products' => $products,
+        'allcategories' => $allcategories,
+        'colors' => $colors,
+        'sizes' => $sizes,
+        'suppliers' => $suppliers,
+        'totalProducts' => $count,
+        'search' => $query,
+        'sort' => $sortOrder,
+        'color' => $selectedColor,
+        'size' => $selectedSize,
+        'stockStatus' => $stockStatus,
+        'selectedCategory' => $selectedCategory
+    ]);
+}
+
 
 
     /**

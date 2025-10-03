@@ -28,6 +28,7 @@ class Product extends Model
         'batch_no',
         'total_quantity',
         'purchase_date',
+        'unit_id',
     ];
 
     // public static function boot()
@@ -39,6 +40,12 @@ class Product extends Model
     //         $model->barcode = $model->generateUniqueCode(12);
     //     });
     // }
+
+     public function unit()
+    {
+        return $this->belongsTo(Unit::class, 'unit_id','id');
+    }
+
 
     public function category()
     {

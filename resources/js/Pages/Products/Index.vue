@@ -393,6 +393,7 @@
     :categories="allcategories"
     :colors="colors"
     :sizes="sizes"
+     :units="units"
     :suppliers="suppliers"
     v-model:open="isCreateModalOpen"
   />
@@ -402,6 +403,7 @@
     :suppliers="suppliers"
     :sizes="sizes"
     v-model:open="isEditModalOpen"
+      :units="units"
     :selected-product="selectedProduct"
   />
 
@@ -410,6 +412,7 @@
     :colors="colors"
     :suppliers="suppliers"
     :sizes="sizes"
+      :units="units"
     v-model:open="isDuplicateModalOpen"
     :selected-product="selectedProduct"
   />
@@ -417,6 +420,7 @@
   <ProductViewModel
     :categories="allcategories"
     :colors="colors"
+      :units="units"
     :sizes="sizes"
     v-model:open="isViewModalOpen"
     :selected-product="selectedProduct"
@@ -483,6 +487,10 @@ const props = defineProps({
   sizes: Array,
   allcategories: Array,
   totalProducts: Number,
+   units: {
+    type: Array,
+    required: true,
+  },
   search: String,
   sort: String,
   color: String,

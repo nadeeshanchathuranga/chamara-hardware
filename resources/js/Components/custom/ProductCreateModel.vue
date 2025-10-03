@@ -455,6 +455,46 @@
                         {{ form.errors.sub_id }}
                       </span>
                     </div>
+
+                     <div class="w-full">
+    <label class="block text-sm font-medium text-gray-300">Type:</label>
+    <select
+      v-model="form.type"
+      class="w-full px-4 py-2 mt-2 text-black bg-white rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+    >
+      <option value="">Select Type</option>
+      <option value="Normal">Normal</option>
+      <option value="Weight Based">Weight Based</option>
+    </select>
+    <span v-if="form.errors.type" class="mt-2 text-red-500">
+      {{ form.errors.type }}
+    </span>
+  </div>
+
+                    
+                    <div class="w-full" v-if="form.type === 'Weight Based'">
+                    <label class="block text-sm font-medium text-gray-300">Unit:</label>
+                    <select
+                    id="unit_id"
+                      v-model="form.unit_id"
+                      class="w-full px-4 py-2 mt-2 text-black bg-white rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+                    >
+                      <option value="">Select a Unit</option>
+                      <option
+                        v-for="unit in units"
+                        :key="unit.id"
+                        :value="unit.id"
+                      >
+                        {{ unit.name }}
+                      </option>
+                    </select>
+                    <span v-if="form.errors.unit_id" class="mt-2 text-red-500">
+                      {{ form.errors.unit_id }}
+                    </span>
+                  </div>
+
+
+
                   </div>
                 </div>
                 <div class="flex items-center gap-8 mt-6">
@@ -623,8 +663,10 @@ const emit = defineEmits(["update:open"]);
 
 const isPharma = computed(() => import.meta.env.VITE_APP_NAME === "pharma");
 
+
+ 
 // Define props
-const { open, categories, colors, suppliers, sizes, selectedProduct } =
+const { open, categories, colors, suppliers, sizes, units ,selectedProduct } =
   defineProps({
     open: {
       type: Boolean,
@@ -643,6 +685,10 @@ const { open, categories, colors, suppliers, sizes, selectedProduct } =
       required: true,
     },
     sizes: {
+      type: Array,
+      required: true,
+    },
+    units: {
       type: Array,
       required: true,
     },
@@ -669,7 +715,8 @@ const form = useForm({
   expire_date: null,
   batch_no: "",
   purchase_date: null,
-
+   unit_id: "",
+   type: "Normal",
 
 });
 

@@ -136,7 +136,10 @@
                return `
            <tr>
              <td>${product.name}</td>
-             <td style="text-align: center;">${product.quantity}</td>
+           <td style="text-align: center;">
+  ${product.quantity} ${product.unit_id ? (product.unit?.name || '') : ''}
+</td>
+
              <td>
                ${product.discount > 0 && product.apply_discount
                        ? `<div style="font-weight: bold; font-size: 7px; background-color:black; color:white;text-align:center;">${product.discount}% off</div>`
@@ -314,72 +317,45 @@
        const discountedPrice = item.apply_discount
          ? Number(item.discounted_price)
          : originalPrice;
+       const unitName = item.unit_id && item.unit ? item.unit.name : '';
 
        return `
-
-
-
-
     <tr>
-                      <td colspan="4"  ">
-
-
-         <b>${item.name}</b><br>
-             <small style="font-size: 12x; font-weight:600;">Selling Price: ${originalPrice.toFixed(2)}  </small>
+      <td colspan="4">
+        <b>${item.name}</b><br>
+        <small style="font-size: 12px; font-weight:600;">Selling Price: ${originalPrice.toFixed(2)}</small>
+        
         ${
-     item.discount > 0
-       ? `<small
-           style="
-             background-color: #000;
-             color: #fff;
-             font-size: 9px;
-             font-weight: 600;
-             padding: 2px 6px;
-             border-radius: 4px;
-             margin: 0 8px;
-           "
-         >
-           ${
-             item.discount_type === 'percent'
-               ? item.discount + '% off'
-               : item.discount.toFixed(2) + ' LKR off'
-           }
-         </small>`
-       : ''
-   }
-
-
-
-                          </td>
-                  </tr>
-                  <tr style="border-bottom: 1px dashed #000;  font-size: 14px; font-weight:600;">
-    <td style="text-align: left;"></td>
-
-                      <td style="text-align: center;">     ${item.quantity} × ${discountedPrice.toFixed(2)}</td>
-                      <td style="text-align: right;">    ${(discountedPrice * item.quantity).toFixed(2)}</td>
-                  </tr>
-
-
-
-
-
-
-
-
+          item.discount > 0
+            ? `<small
+                style="
+                  background-color: #000;
+                  color: #fff;
+                  font-size: 9px;
+                  font-weight: 600;
+                  padding: 2px 6px;
+                  border-radius: 4px;
+                  margin: 0 8px;
+                "
+              >
+                ${
+                  item.discount_type === 'percent'
+                    ? item.discount + '% off'
+                    : item.discount.toFixed(2) + ' LKR off'
+                }
+              </small>`
+            : ''
+        }
+      </td>
+    </tr>
+    <tr style="border-bottom: 1px dashed #000; font-size: 14px; font-weight:600;">
+      <td style="text-align: left;"></td>
+      <td style="text-align: center;">${item.quantity}${unitName ? ' ' + unitName : ''} × ${discountedPrice.toFixed(2)}</td>
+      <td style="text-align: right;">${(discountedPrice * item.quantity).toFixed(2)}</td>
+    </tr>
        `;
      }).join('')}
    </tbody>
-
-
-
-
-
-
-
-
-
-
-
    </table>
 
        </div>

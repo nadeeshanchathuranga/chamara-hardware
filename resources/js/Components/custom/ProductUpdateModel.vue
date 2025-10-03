@@ -241,6 +241,41 @@
                 </div>
 
                 <div class="flex items-center gap-8 mt-6">
+  <div class="w-full">
+    <label class="block text-sm font-medium text-gray-300">Type:</label>
+    <select
+      v-model="form.type"
+      class="w-full px-4 py-2 mt-2 text-black bg-white rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+    >
+      <option value="">Select Type</option>
+      <option value="Normal">Normal</option>
+      <option value="Weight Based">Weight Based</option>
+    </select>
+    <span v-if="form.errors.type" class="mt-2 text-red-500">
+      {{ form.errors.type }}
+    </span>
+  </div>
+
+  <div class="w-full" v-if="form.type === 'Weight Based'">
+    <label class="block text-sm font-medium text-gray-300">Unit:</label>
+    <select
+      v-model="form.unit_id"
+      id="unit_id"
+      class="w-full px-4 py-2 mt-2 text-black bg-white rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+    >
+      <option value="">Select a Unit</option>
+      <option v-for="unit in units" :key="unit.id" :value="unit.id">
+        {{ unit.name }}
+      </option>
+    </select>
+    <span v-if="form.errors.unit_id" class="mt-2 text-red-500">
+      {{ form.errors.unit_id }}
+    </span>
+  </div>
+</div>
+
+
+                <div class="flex items-center gap-8 mt-6">
                   <!-- Cost Price input -->
                   <div class="w-full">
                     <label
@@ -507,7 +542,7 @@ const playClickSound = () => {
 };
 
 // Define props
-const { open, categories, colors, suppliers, sizes, selectedProduct } =
+const { open, categories, colors, suppliers, sizes, selectedProduct , units } =
   defineProps({
     open: {
       type: Boolean,
@@ -529,6 +564,7 @@ const { open, categories, colors, suppliers, sizes, selectedProduct } =
       type: Array,
       required: true,
     },
+    units: { type: Array, required: true },
     selectedProduct: {
       type: Object,
       default: null,
@@ -552,6 +588,7 @@ const form = useForm({
   image: null,
   expire_date: null,
   batch_no: "",
+  unit_id: "",
   purchase_date: null,
 });
 
@@ -586,41 +623,7 @@ function updateDiscount() {
     );
   }
 }
-// Utility function to limit to 2 decimal points
-// function limitToTwoDecimals(value) {
-//   if (value === null || value === undefined) return value;
-//   const strValue = value.toString();
-//   const match = strValue.match(/^(\d+)(\.\d{0,2})?/); // Match up to 2 decimal places
-//   return match ? parseFloat(match[0]) : value;
-// }
-
-// // Computed property for dynamically calculating the discounted price
-// const discountedPrice = computed(() => {
-//   if (form.selling_price && form.discount) {
-//     const discountAmount = (form.selling_price * form.discount) / 100;
-//     return limitToTwoDecimals(form.selling_price - discountAmount);
-//   }
-//   return form.selling_price || 0;
-// });
-
-// // Watch the computed discounted price and update the form's discounted_price field
-// watch(discountedPrice, (newValue) => {
-//   form.discounted_price = limitToTwoDecimals(newValue);
-// });
-
-// // Watch the discounted_price field to dynamically calculate the discount percentage
-// watch(
-//   () => form.discounted_price,
-//   (newDiscountedPrice) => {
-//     if (form.selling_price && newDiscountedPrice) {
-//       const discountAmount =
-//         form.selling_price - parseFloat(newDiscountedPrice);
-//       form.discount = limitToTwoDecimals(
-//         (discountAmount / form.selling_price) * 100
-//       );
-//     }
-//   }
-// );
+ 
 
 // Watch for changes in selectedProduct and populate form
 watch(
@@ -641,6 +644,7 @@ watch(
       form.barcode = newValue.barcode || "";
       form.batch_no = newValue.batch_no || "";
       form.image = newValue.image || null;
+        form.unit_id = newValue.unit_id || "";
       form.expire_date = newValue.expire_date
         ? new Date(newValue.expire_date).toISOString().split("T")[0]
         : null;

@@ -36,7 +36,7 @@ class PosController extends Controller
         $colors = Color::orderBy('created_at', 'desc')->get();
         $sizes = Size::orderBy('created_at', 'desc')->get();
         $allemployee = Employee::orderBy('created_at', 'desc')->get();
-        $products = Product::orderBy('name', 'asc')->get(); // Add products in ascending order
+        $products = Product::with('unit')->orderBy('name', 'asc')->get(); // Add products in ascending order
 
 
         // Render the page for GET requests

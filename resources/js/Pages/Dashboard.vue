@@ -28,6 +28,9 @@
         </div>
       </Link>
 
+
+      
+
       <Link href="/categories" v-if="HasRole(['Admin', 'Manager'])">
         <div class="dashboard-card bg-[#003161]">
           <div class="card-content">
@@ -105,6 +108,29 @@
               <p class="description">
                 Manage supplier information, purchase orders, and inventory
                 updates seamlessly.
+              </p>
+            </div>
+          </div>
+        </div>
+      </Link>
+
+
+<Link href="/units" v-if="HasRole(['Admin', 'Manager'])">
+        <div class="dashboard-card bg-[#2a1b58]">
+          <div class="card-content">
+            <div class="icon-container">
+              <img
+                src="/images/dashboard/units.png"
+                class="icon"
+                alt="dresshub.lk"
+              />
+            </div>
+            <div class="text-container">
+              <p class="title">Units</p>
+              <p class="description">
+                Manage and standardize product Units
+                to ensure accurate inventory tracking, consistent pricing, 
+                and a smoother sales process
               </p>
             </div>
           </div>

@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product; 
+use App\Models\Unit;
 use App\Models\CompanyInfo;
 use App\Models\StockTransaction;
 use Illuminate\Support\Facades\Gate;
@@ -15,7 +16,7 @@ class TransactionHistoryController extends Controller
 {
     public function index()
 {
-    $allhistoryTransactions = Sale::with(['saleItems','saleItems.product','customer','user'])
+    $allhistoryTransactions = Sale::with(['saleItems.unit','saleItems.product','customer','user'])
         ->orderBy('created_at', 'desc')
         ->get();
 

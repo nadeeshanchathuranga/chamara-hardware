@@ -122,12 +122,12 @@
   {{ history.sale_date || "N/A" }}
 </td>
                             <td class="p-4 font-bold border-gray-200">
-                                <button
+                                <!-- <button
                                     @click="printReceipt(history)"
                                     class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 mr-4"
                                 >
                                     Print
-                                </button>
+                                </button> -->
                                 <button class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600" @click="deleteReceipt(history.order_id)">
                                     Delete
                                 </button>
@@ -215,14 +215,14 @@ const getSafeValue = (obj, path) => {
     return path.split('.').reduce((acc, part) => (acc && acc[part] ? acc[part] : ''), obj);
   };
 
-
-
-
 const saleItems = Array.isArray(history.sale_items) ? history.sale_items : [];
 
 const productRows = saleItems.map((item) => {
   const name = item?.name || item?.product?.name || "Item";
   const qty = Number(item?.quantity) || 0;
+
+  // Get unit name if available
+  const unitName = item?.unit?.name || item?.product?.unit?.name || '';
 
   // Base/original price (fallbacks supported)
   const originalPrice = Number(
@@ -258,6 +258,7 @@ const productRows = saleItems.map((item) => {
         <small style="font-size: 12px; font-weight:600;">
           Selling Price: ${originalPrice.toFixed(2)}
         </small>
+        ${unitName ? `<br><small style="font-size: 11px; color: #666;">Unit: ${unitName}</small>` : ''}
         ${
           hasDiscount
             ? `<small
@@ -277,19 +278,11 @@ const productRows = saleItems.map((item) => {
     </tr>
     <tr style="border-bottom:1px dashed #000; font-size:14px; font-weight:600;">
       <td style="text-align:left;"></td>
-      <td style="text-align:center;">${qty} × ${discountedPrice.toFixed(2)}</td>
+      <td style="text-align:center;">${qty}${unitName ? ' ' + unitName : ''} × ${discountedPrice.toFixed(2)}</td>
       <td style="text-align:right;">${(discountedPrice * qty).toFixed(2)}</td>
     </tr>
   `;
 }).join("");
-
-
-
-
-
-
-
-
 
   const receiptContent = `
   <!DOCTYPE html>
@@ -458,7 +451,7 @@ const productRows = saleItems.map((item) => {
                 <span>${history.discount || 0} LKR</span>
             </div>
             <div>
-                <span>Custome Discount</span>
+                <span>Custom Discount</span>
                 <span>${history.custom_discount || 0} LKR</span>
             </div>
             <div>
@@ -495,8 +488,6 @@ const productRows = saleItems.map((item) => {
   printWindow.print();
   printWindow.close();
 };
-
-
 
 
 </script>

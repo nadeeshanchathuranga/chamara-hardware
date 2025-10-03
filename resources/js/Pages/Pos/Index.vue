@@ -161,6 +161,16 @@
     <span class="font-bold">{{ item.cost_price }}</span>
 </p>
 
+ <p
+    v-if="item.unit_id"
+    class="col-span-12 flex items-center gap-2 text-black font-bold text-2xl whitespace-nowrap"
+  >
+    <span class="text-base font-normal text-gray-500">Unit:</span>
+    <span class="px-2 py-0.5 text-black text-xl">
+      {{ item.unit?.name || '' }}
+    </span>
+  </p>
+
 
                                 <div class="flex items-center justify-between w-full">
                                     <div class="flex space-x-4">
@@ -173,12 +183,28 @@
                     >
                       {{ item.quantity }}
                     </p> -->
-                                        <input type="number" v-model="item.quantity" min="0"
-                                            class="bg-[#D9D9D9] border-2 border-black h-8 w-24 text-black flex justify-center items-center rounded text-center" />
+                                        <!-- <input type="number" v-model="item.quantity" min="0"
+                                            class="bg-[#D9D9D9] border-2 border-black h-8 w-24 text-black flex justify-center items-center rounded text-center" /> -->
+
+ <input
+                                            type="number"
+                                            v-model.number="item.quantity"
+                                            min="0"
+                                            step="0.1"
+                                             :disabled="!item.unit_id"
+                                            @input="updateItemTotal(item)"
+                                            class="bg-[#D9D9D9] border-2 border-black h-8 w-24 text-black text-center rounded"
+                                            />
+
+
+
                                         <p @click="decrementQuantity(item.id)"
                                             class="flex items-center justify-center w-8 h-8 text-white bg-black rounded cursor-pointer">
                                             <i class="ri-subtract-line"></i>
                                         </p>
+
+
+                                         
                                     </div>
                                     <div class="flex items-center justify-center">
                                         <div>
@@ -187,6 +213,9 @@
 
  <div class="flex items-center space-x-2">
   <!-- Discount value -->
+
+ 
+
   <input
     type="number"
     v-model.number="item.discount"
@@ -1082,6 +1111,13 @@ onMounted(async() => {
 //         isLoading.value = false;
 //     }
 // };
+
+const updateItemTotal = (item) => {
+  // Ensure quantity is a valid number
+  if (item.quantity < 0 || isNaN(item.quantity)) {
+    item.quantity = 1;
+  }
+};
 
 const applyDiscount = (id) => {
   products.value.forEach((product) => {

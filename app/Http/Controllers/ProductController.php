@@ -7,6 +7,7 @@ use App\Models\Size;
 use App\Models\Color;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Unit;
 use App\Models\Supplier;
 use App\Models\StockTransaction;
 use App\Traits\GeneratesUniqueCode;
@@ -43,7 +44,7 @@ class ProductController extends Controller
     // Normalize search: lower + remove spaces (so "10 ft" == "10ft")
     $normalized = Str::of($rawQuery)->lower()->replace(' ', '')->toString();
 
-    $productsQuery = Product::with(['category', 'color', 'size', 'supplier'])
+    $productsQuery = Product::with(['category', 'color', 'size', 'supplier','unit'])
         ->when($rawQuery !== '', function ($qb) use ($normalized) {
             $qb->where(function ($sub) use ($normalized) {
                 // Compare with spaces removed, case-insensitive
@@ -84,7 +85,7 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+   public function index(Request $request)
 {
     $query = $request->input('search');
     $sortOrder = $request->input('sort');
@@ -95,14 +96,21 @@ class ProductController extends Controller
 
     $productsQuery = Product::with('category', 'color', 'size', 'supplier')
         ->when($query, function ($queryBuilder) use ($query) {
-            $normalizedSearch = str_replace(' ', '', strtolower($query)); // remove spaces + lowercase
+            $normalizedSearch = str_replace(' ', '', strtolower($query)); 
+            $keywords = preg_split('/\s+/', strtolower($query)); // split by spaces
 
-            $queryBuilder->where(function ($subQuery) use ($query, $normalizedSearch) {
-                $subQuery
-                    // normal LIKE (case-insensitive)
-                    ->whereRaw("LOWER(name) LIKE ?", ["%".strtolower($query)."%"])
-                    ->orWhereRaw("REPLACE(LOWER(name), ' ', '') LIKE ?", ["%".$normalizedSearch."%"])
-                    ->orWhereRaw("LOWER(code) LIKE ?", ["%".strtolower($query)."%"]);
+            $queryBuilder->where(function ($subQuery) use ($query, $normalizedSearch, $keywords) {
+                // Full phrase / normalized search
+                $subQuery->whereRaw("LOWER(name) LIKE ?", ["%" . strtolower($query) . "%"])
+                    ->orWhereRaw("REPLACE(LOWER(name), ' ', '') LIKE ?", ["%" . $normalizedSearch . "%"])
+                    ->orWhereRaw("LOWER(code) LIKE ?", ["%" . strtolower($query) . "%"]);
+
+                // Match each keyword separately
+                foreach ($keywords as $word) {
+                    if (!empty($word)) {
+                        $subQuery->orWhereRaw("LOWER(name) LIKE ?", ["%" . $word . "%"]);
+                    }
+                }
             });
         })
         ->when($selectedColor, function ($queryBuilder) use ($selectedColor) {
@@ -139,18 +147,20 @@ class ProductController extends Controller
     }
 
     $allcategories = Category::with('parent')->get()->map(function ($category) {
-        $category->hierarchy_string = $category->hierarchy_string; // Access it
+        $category->hierarchy_string = $category->hierarchy_string; 
         return $category;
     });
     $colors = Color::orderBy('created_at', 'desc')->get();
     $sizes = Size::orderBy('created_at', 'desc')->get();
     $suppliers = Supplier::orderBy('created_at', 'desc')->get();
+    $units = Unit::orderBy('id', 'desc')->get();
 
     return Inertia::render('Products/Index', [
         'products' => $products,
         'allcategories' => $allcategories,
         'colors' => $colors,
         'sizes' => $sizes,
+        'units' => $units,
         'suppliers' => $suppliers,
         'totalProducts' => $count,
         'search' => $query,
@@ -191,6 +201,8 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+
+ 
         if (!Gate::allows('hasRole', ['Admin'])) {
             abort(403, 'Unauthorized');
         }
@@ -204,6 +216,7 @@ class ProductController extends Controller
             //     'max:50',
             //     Rule::unique('products')->whereNull('deleted_at'),
             // ],
+              'unit_id' => 'nullable|exists:units,id',
             'size_id' => 'nullable|exists:sizes,id',
             'color_id' => 'nullable|exists:colors,id',
             'cost_price' => 'nullable|numeric|min:0',
@@ -283,6 +296,7 @@ class ProductController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'name' => 'required|string|max:255',
             'code' => 'nullable|string|max:50',
+             'unit_id' => 'nullable|exists:units,id',
             // 'code' => 'required|string|max:50|unique:products,code, NULL,id,deleted_at,NULL',
             'barcode' => 'nullable|string|unique:products',
             'size_id' => 'nullable|exists:sizes,id',
@@ -415,6 +429,7 @@ class ProductController extends Controller
             // 'code' => 'nullable|string|max:50',
             // 'code' => 'string|max:50|unique:products,code,' . $product->id . ',id,deleted_at,NULL',
             'size_id' => 'nullable|exists:sizes,id',
+             'unit_id' => 'nullable|exists:units,id',
             'color_id' => 'nullable|exists:colors,id',
             'cost_price' => 'numeric|min:0',
             'selling_price' => 'numeric|min:0',

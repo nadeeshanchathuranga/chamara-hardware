@@ -327,7 +327,7 @@
 
                 <div class="flex items-center gap-8 mt-6">
                   <!-- Cost Price input -->
-                  <div class="w-full hidden">
+                  <div class="w-full  ">
                     <label
                       for="cost_price"
                       class="block text-sm font-medium text-gray-300"
@@ -356,7 +356,7 @@
                   </div>
 
                   <!-- Selling Price input -->
-                  <div class="w-full hidden">
+                  <div class="w-full  ">
                     <label
                       for="discounted_price"
                       class="block text-sm font-medium text-gray-300"

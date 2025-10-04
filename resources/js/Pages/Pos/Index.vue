@@ -147,32 +147,77 @@
                                     " alt="Supplier Image" class="object-cover w-16 h-16 border border-gray-500" />
                             </div>
                             <div class="flex flex-col justify-between w-5/6">
-                                <p class="text-xl text-black">
-                                    {{ item.name }}
-                                </p>
+                          <!-- 2-column layout (left details, right actions/price) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
 
-<p class="text-xl text-black">
-    <span class="font-semibold">Selling Price:</span>
-    <span class="font-bold">{{ item.selling_price }}</span>
-</p>
+  <!-- LEFT -->
+  <div class="space-y-2">
+    <p class="text-xl text-black font-semibold">
+      {{ item.name }}
+    </p>
 
-<p class="text-xl text-black">
-    <span class="font-semibold">Cost Price:</span>
-    <span class="font-bold">{{ item.cost_price }}</span>
-</p>
+    <p class="text-xl text-black">
+      <span class="font-semibold">Selling Price:</span>
+      <span class="font-bold">{{ item.selling_price }}</span>
+    </p>
 
- <p
-    v-if="item.unit_id"
-    class="col-span-12 flex items-center gap-2 text-black font-bold text-2xl whitespace-nowrap"
-  >
-    <span class="text-base font-normal text-gray-500">Unit:</span>
-    <span class="px-2 py-0.5 text-black text-xl">
-      {{ item.unit?.name || '' }}
-    </span>
-  </p>
+    <p class="text-xl text-black">
+      <span class="font-semibold">Cost Price:</span>
+      <span class="font-bold">{{ item.cost_price }}</span>
+    </p>
+
+    <p
+      v-if="item.unit_id"
+      class="flex items-center gap-2 text-black text-xl"
+    >
+      <span class="text-base font-normal text-gray-500">Unit:</span>
+      <span class="px-2 py-0.5 text-black font-bold">
+        {{ item.unit?.name || '' }}
+      </span>
+    </p>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="flex justify-end">
+    <div class="space-y-2 text-right md:border-l md:pl-6">
+      <p
+        v-if="
+          item.discount &&
+          item.discount > 0 &&
+          item.apply_discount == false &&
+          !appliedCoupon
+        "
+        @click="applyDiscount(item.id)"
+        class="cursor-pointer py-1 px-1 bg-green-600 rounded-xl font-bold text-white tracking-wider inline-block"
+      >
+        Apply {{ item.discount }}% off
+      </p>
+
+      <p
+        v-if="
+          item.discount &&
+          item.discount > 0 &&
+          item.apply_discount == true &&
+          !appliedCoupon
+        "
+        @click="removeDiscount(item.id)"
+        class="cursor-pointer py-1 px-1 bg-red-600 rounded-xl font-bold text-white tracking-wider inline-block"
+      >
+        Remove {{ item.discount }}% Off
+      </p>
+
+      <p class="text-2xl font-bold text-black">
+        {{ item.selling_price }} <span class="text-base font-semibold">LKR</span>
+      </p>
+    </div>
+  </div>
+
+</div>
+
 
 
                                 <div class="flex items-center justify-between w-full">
+                                    
                                     <div class="flex space-x-4">
                                         <p @click="incrementQuantity(item.id)"
                                             class="flex items-center justify-center w-8 h-8 text-white bg-black rounded cursor-pointer">
@@ -238,45 +283,11 @@
 </div>
 
 
+ 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
                                             <p class="text-2xl font-bold text-black text-right">
                                                {{ item.apply_discount ? item.discounted_price : item.selling_price }} LKR
                                             </p>
@@ -1119,29 +1130,20 @@ const updateItemTotal = (item) => {
 };
 
 const applyDiscount = (id) => {
-  products.value.forEach((product) => {
-    if (product.id === id && product.discount > 0) {
-      // Keep original price if not set
-      if (!product.original_price) {
-        product.original_price = product.selling_price;
-      }
-      // Apply discounted price
-      product.discounted_price =
-        product.original_price - (product.original_price * product.discount) / 100;
-
-      product.apply_discount = true;
-    }
-  });
+    products.value.forEach((product) => {
+        if (product.id === id) {
+            product.apply_discount = true;
+        }
+    });
 };
 
-// const removeDiscount = (id) => {
-//   products.value.forEach((product) => {
-//     if (product.id === id) {
-//       product.apply_discount = false;
-//       product.discounted_price = product.original_price; // Restore original price
-//     }
-//   });
-// };
+const removeDiscount = (id) => {
+    products.value.forEach((product) => {
+        if (product.id === id) {
+            product.apply_discount = false;
+        }
+    });
+};
 
 
 const handleSelectedProducts = (selectedProducts) => {

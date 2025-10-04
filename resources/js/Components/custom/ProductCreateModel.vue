@@ -569,7 +569,7 @@
                 </div>
                 <div class="flex items-center gap-8 mt-6">
 
-                  <div class="w-full hidden">
+                  <div class="w-full ">
                     <label
                       for="discount"
                       class="block text-sm font-medium text-gray-300"
@@ -585,7 +585,7 @@
                       placeholder="Enter discount percentage"
                     />
                   </div>
-                  <div class="w-full hidden">
+                  <div class="w-full  ">
                     <label
                       for="discounted_price"
                       class="block text-sm font-medium text-gray-300"

@@ -338,7 +338,7 @@
                   </div>
 
                   <!-- Selling Price input -->
-                  <div class="w-full hidden">
+                  <div class="w-full  ">
                     <label
                       for="discounted_price"
                       class="block text-sm font-medium text-gray-300"

@@ -206,9 +206,7 @@
         Remove {{ item.discount }}% Off
       </p>
 
-      <p class="text-2xl font-bold text-black">
-        {{ item.selling_price }} <span class="text-base font-semibold">LKR</span>
-      </p>
+      
     </div>
   </div>
 

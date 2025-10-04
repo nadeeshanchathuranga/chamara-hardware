@@ -99,7 +99,7 @@
                         </div>
 
                         <div class="max-w-xs relative space-y-3">
-              <label for="searchProducts" class="text-gray-900">
+              <!-- <label for="searchProducts" class="text-gray-900">
                 Type the product name to search
               </label>
 
@@ -109,7 +109,7 @@
                 type="text"
                 placeholder="Enter Product Name or BarCode!"
                 class="w-full h-16 px-4 rounded-l-2xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              /> -->
 
               <ul
                 v-if="searchResults.length"

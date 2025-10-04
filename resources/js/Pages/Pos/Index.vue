@@ -191,7 +191,6 @@
                                             v-model.number="item.quantity"
                                             min="0"
                                             step="0.1"
-                                             :disabled="!item.unit_id"
                                             @input="updateItemTotal(item)"
                                             class="bg-[#D9D9D9] border-2 border-black h-8 w-24 text-black text-center rounded"
                                             />

@@ -16,6 +16,52 @@
           </div>
         </div>
 
+        <!-- Low Stock Alerts -->
+        <div v-if="props.lowColoranceStocks.length || props.lowBaseStocks.length" class="mb-6">
+          <div v-if="props.lowColoranceStocks.length" class="mb-3 p-4 rounded-lg bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800">
+            <div class="flex items-center cursor-pointer" @click="showColoranceDetails = !showColoranceDetails">
+              <svg class="w-5 h-5 text-yellow-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+              </svg>
+              <strong class="font-semibold flex-1">Low Colorance Stock Alert ({{ props.lowColoranceStocks.length }} items)</strong>
+              <svg class="w-4 h-4 text-yellow-600 transition-transform duration-200" :class="{ 'rotate-180': showColoranceDetails }" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+            <transition name="slide-down">
+              <ul v-show="showColoranceDetails" class="list-disc ml-7 mt-3 space-y-1">
+                <li v-for="item in props.lowColoranceStocks" :key="item.id" class="text-sm">
+                  <span class="font-medium">{{ item.name }}</span> 
+                  <span class="text-yellow-600">({{ item.can_size }})</span> - 
+                  <span class="font-bold text-red-600">{{ item.unit }} units remaining</span>
+                </li>
+              </ul>
+            </transition>
+          </div>
+          
+          <div v-if="props.lowBaseStocks.length" class="mb-3 p-4 rounded-lg bg-orange-50 border-l-4 border-orange-400 text-orange-800">
+            <div class="flex items-center cursor-pointer" @click="showBaseStockDetails = !showBaseStockDetails">
+              <svg class="w-5 h-5 text-orange-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+              </svg>
+              <strong class="font-semibold flex-1">Low Base Stock Alert ({{ props.lowBaseStocks.length }} items)</strong>
+              <svg class="w-4 h-4 text-orange-600 transition-transform duration-200" :class="{ 'rotate-180': showBaseStockDetails }" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+              </svg>
+            </div>
+            <transition name="slide-down">
+              <ul v-show="showBaseStockDetails" class="list-disc ml-7 mt-3 space-y-1">
+                <li v-for="item in props.lowBaseStocks" :key="item.id" class="text-sm">
+                  <span class="font-medium">{{ item.paint_product?.name || 'Paint Product' }}</span> / 
+                  <span class="font-medium">{{ item.base_type?.name || 'Base Type' }}</span> 
+                  <span class="text-orange-600">({{ item.can_size }})</span> - 
+                  <span class="font-bold text-red-600">{{ item.quantity }} units remaining</span>
+                </li>
+              </ul>
+            </transition>
+          </div>
+        </div>
+
         <!-- GRID -->
         <div v-if="HasRole(['Admin','Manager'])" class="space-y-6">
           <!-- Row 1: small cards -->
@@ -115,6 +161,174 @@
                 </div>
               </div>
             </Link>
+          </div>
+        </div>
+
+        <!-- Paint Order Sales Table -->        
+         <div v-if="props.paintOrderDetails.length" class="mt-8">
+          <div class="bg-white rounded-xl shadow-lg border border-gray-200">
+            <div class="p-6 border-b border-gray-200">
+              <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                  <ShoppingCart class="w-6 h-6 mr-2 text-blue-600" />
+                  Paint Order Sales
+                </h2>
+                <div class="text-sm text-gray-600">
+                  Showing {{ props.paintOrderPagination.from || 1 }} - {{ props.paintOrderPagination.to || props.paintOrderDetails.length }} of {{ props.paintOrderPagination.total || 0 }} orders
+                </div>
+              </div>
+              
+              <!-- Summary Cards -->
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                  <div class="text-sm font-medium text-blue-600">Total Orders</div>
+                  <div class="text-2xl font-bold text-blue-800">{{ props.paintOrderSummary.total_orders || 0 }}</div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg">
+                  <div class="text-sm font-medium text-green-600">Total Revenue</div>
+                  <div class="text-2xl font-bold text-green-800">Rs. {{ (props.paintOrderSummary.total_amount || 0).toLocaleString() }}</div>
+                </div>
+                <div class="bg-purple-50 p-4 rounded-lg">
+                  <div class="text-sm font-medium text-purple-600">Total Profit</div>
+                  <div class="text-2xl font-bold text-purple-800">Rs. {{ (props.paintOrderSummary.total_profit || 0).toLocaleString() }}</div>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-lg">
+                  <div class="text-sm font-medium text-orange-600">Total Cost</div>
+                  <div class="text-2xl font-bold text-orange-800">Rs. {{ (props.paintOrderSummary.total_cost || 0).toLocaleString() }}</div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Sales Table -->
+            <div class="overflow-x-auto">
+              <table class="min-w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Order #</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Customer</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Product Details</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Quantity</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Unit Cost</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Selling Price</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Total Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Profit</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Payment Method</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr v-for="order in props.paintOrderDetails" :key="order.order_id" class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                      #{{ order.order_id }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {{ order.customer_name || 'N/A' }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                      <div class="max-w-xs">
+                        <div class="font-bold text-blue-800 text-sm mb-1">{{ order.paint_product || 'N/A' }}</div>
+                        <div class="text-gray-600 text-xs">
+                          <span v-if="order.color_card" class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-md mr-1 mb-1">
+                            {{ order.color_card }}
+                          </span>
+                          <span v-if="order.base_type" class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded-md mr-1 mb-1">
+                            {{ order.base_type }}
+                          </span>
+                        </div>
+                        <div v-if="order.can_size" class="text-gray-500 text-xs mt-1">
+                          <span class="inline-block bg-gray-100 text-gray-700 px-2 py-1 rounded-md">
+                            📦 {{ order.can_size }}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {{ order.quantity || 0 }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium">
+                      Rs. {{ (order.unit_cost || 0).toLocaleString() }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
+                      Rs. {{ (order.selling_price || 0).toLocaleString() }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                      Rs. {{ (order.total_amount || 0).toLocaleString() }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-purple-600">
+                      Rs. {{ (order.profit || 0).toLocaleString() }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <span class="px-2 py-1 text-xs font-medium rounded-full" 
+                            :class="{
+                              'bg-green-100 text-green-800': order.payment_method === 'Cash',
+                              'bg-blue-100 text-blue-800': order.payment_method === 'Card',
+                              'bg-orange-100 text-orange-800': order.payment_method === 'Koko'
+                            }">
+                        {{ order.payment_method || 'N/A' }}
+                      </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {{ new Date(order.sale_date || order.generated_at).toLocaleDateString() }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            
+            <!-- Simple Pagination Controls -->
+            <div v-if="props.paintOrderDetails.length > 0" class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                
+                <!-- Results Info -->
+                <div class="text-sm text-gray-700">
+                  Showing {{ props.paintOrderPagination.from || 1 }} to {{ props.paintOrderPagination.to || props.paintOrderDetails.length }} of {{ props.paintOrderPagination.total || props.paintOrderDetails.length }} results
+                </div>
+
+                <!-- Page Navigation -->
+                <div class="flex items-center gap-2">
+                  <!-- Previous Button -->
+                  <button 
+                    v-if="(props.paintOrderPagination.last_page || 1) > 1"
+                    @click="goToPage((props.paintOrderPagination.current_page || 1) - 1)"
+                    :disabled="(props.paintOrderPagination.current_page || 1) <= 1"
+                    class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+                  
+                  <!-- Page Numbers with "Page" label -->
+                  <div class="flex items-center gap-1">
+                    <span class="text-sm text-gray-600 mr-1">Page</span>
+                    <template v-for="page in getPaginationPages()" :key="page">
+                      <button v-if="page !== '...'"
+                        @click="goToPage(page)"
+                        :class="{
+                          'bg-blue-600 text-white border-blue-600 font-semibold': page === (props.paintOrderPagination.current_page || 1),
+                          'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:text-blue-600': page !== (props.paintOrderPagination.current_page || 1)
+                        }"
+                        class="min-w-[40px] px-3 py-2 text-sm font-medium border rounded-md transition-colors"
+                      >
+                        {{ page }}
+                      </button>
+                      <span v-else class="px-2 text-sm text-gray-400">...</span>
+                    </template>
+                    <span v-if="(props.paintOrderPagination.last_page || 1) > 1" class="text-sm text-gray-600 ml-1">
+                      of {{ props.paintOrderPagination.last_page || 1 }}
+                    </span>
+                  </div>
+                  
+                  <!-- Next Button -->
+                  <button 
+                    v-if="(props.paintOrderPagination.last_page || 1) > 1"
+                    @click="goToPage((props.paintOrderPagination.current_page || 1) + 1)"
+                    :disabled="(props.paintOrderPagination.current_page || 1) >= (props.paintOrderPagination.last_page || 1)"
+                    class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1200,7 +1414,92 @@ const props = defineProps({
   paintTypes:      { type: Array, default: () => [] },
   colorCards:      { type: Array, default: () => [] },
   baseTypes:       { type: Array, default: () => [] },
+  lowColoranceStocks: { type: Array, default: () => [] },
+  lowBaseStocks: { type: Array, default: () => [] },
+  paintOrderSummary: { type: Object, default: () => ({}) },
+  paintOrderDetails: { type: Array, default: () => [] },
+  paintOrderPagination: { type: Object, default: () => ({}) },
 })
+
+/* ------------- Alert visibility controls ------------- */
+const showColoranceDetails = ref(false)
+const showBaseStockDetails = ref(false)
+
+/* ------------- Pagination function ------------- */
+function goToPage(page) {
+  // Ensure page is a valid number
+  const pageNum = parseInt(page)
+  if (isNaN(pageNum) || pageNum < 1) return
+  
+  router.visit(route('paints.index', { page: pageNum }), {
+    preserveState: true,
+    preserveScroll: true,
+  })
+}
+
+// Handle items per page change
+function changeItemsPerPage(perPage) {
+  const perPageNum = parseInt(perPage)
+  if (isNaN(perPageNum) || perPageNum < 1) return
+  
+  router.visit(route('paints.index', { 
+    page: 1, // Reset to first page when changing items per page
+    per_page: perPageNum 
+  }), {
+    preserveState: true,
+    preserveScroll: true,
+  })
+}
+
+// Handle jump to page
+function jumpToPage(page) {
+  const pageNum = parseInt(page)
+  const currentPage = props.paintOrderPagination.current_page || 1
+  const maxPage = props.paintOrderPagination.last_page || 1
+  
+  if (pageNum >= 1 && pageNum <= maxPage && pageNum !== currentPage) {
+    goToPage(pageNum)
+  }
+}
+
+function getPaginationPages() {
+  const current = props.paintOrderPagination.current_page || 1
+  const last = props.paintOrderPagination.last_page || 1
+  const pages = []
+  
+  // Always show at least page 1
+  if (last <= 1) {
+    return [1]
+  }
+  
+  if (last <= 7) {
+    // Show all pages if 7 or fewer
+    for (let i = 1; i <= last; i++) {
+      pages.push(i)
+    }
+  } else {
+    // Show first page, ellipsis, current-1, current, current+1, ellipsis, last page
+    pages.push(1)
+    
+    if (current > 3) {
+      pages.push('...')
+    }
+    
+    for (let i = Math.max(2, current - 1); i <= Math.min(last - 1, current + 1); i++) {
+      pages.push(i)
+    }
+    
+    if (current < last - 2) {
+      pages.push('...')
+    }
+    
+    if (last > 1) {
+      pages.push(last)
+    }
+  }
+  
+  return pages
+}
 
 /* ------------- Small “Add Name” modal ------------- */
 const isOpen = ref(false)
@@ -1944,5 +2243,16 @@ onBeforeUnmount(() => {
 .fade-enter-from, .fade-leave-to { 
   opacity: 0; 
   transform: scale(0.95);
+}
+
+.slide-down-enter-active, .slide-down-leave-active {
+  transition: all 0.3s ease;
+  max-height: 200px;
+  overflow: hidden;
+}
+.slide-down-enter-from, .slide-down-leave-to {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>

@@ -45,11 +45,13 @@ class ProductController extends Controller
     $normalized = Str::of($rawQuery)->lower()->replace(' ', '')->toString();
 
     $productsQuery = Product::with(['category', 'color', 'size', 'supplier','unit'])
-        ->when($rawQuery !== '', function ($qb) use ($normalized) {
-            $qb->where(function ($sub) use ($normalized) {
-                // Compare with spaces removed, case-insensitive
-                $sub->whereRaw("REPLACE(LOWER(name), ' ', '') LIKE ?", ["%{$normalized}%"])
-                    ->orWhereRaw("REPLACE(LOWER(code), ' ', '') LIKE ?", ["%{$normalized}%"]);
+        ->when($rawQuery !== '', function ($qb) use ($rawQuery) {
+            $searchTerm = strtolower(trim($rawQuery));
+            $qb->where(function ($sub) use ($searchTerm) {
+                // Match complete words only using word boundaries
+                $sub->whereRaw("LOWER(name) REGEXP ?", ["\\b{$searchTerm}\\b"])
+                    ->orWhereRaw("LOWER(name) LIKE ?", ["{$searchTerm}%"])
+                    ->orWhereRaw("LOWER(code) LIKE ?", ["{$searchTerm}%"]);
             });
         })
         ->when($selectedColor, function ($qb) use ($selectedColor) {
@@ -96,19 +98,20 @@ class ProductController extends Controller
 
     $productsQuery = Product::with('category', 'color', 'size', 'supplier')
         ->when($query, function ($queryBuilder) use ($query) {
-            $normalizedSearch = str_replace(' ', '', strtolower($query)); 
-            $keywords = preg_split('/\s+/', strtolower($query)); // split by spaces
+            $searchTerm = strtolower(trim($query));
+            $keywords = preg_split('/\s+/', $searchTerm); // split by spaces
 
-            $queryBuilder->where(function ($subQuery) use ($query, $normalizedSearch, $keywords) {
-                // Full phrase / normalized search
-                $subQuery->whereRaw("LOWER(name) LIKE ?", ["%" . strtolower($query) . "%"])
-                    ->orWhereRaw("REPLACE(LOWER(name), ' ', '') LIKE ?", ["%" . $normalizedSearch . "%"])
-                    ->orWhereRaw("LOWER(code) LIKE ?", ["%" . strtolower($query) . "%"]);
+            $queryBuilder->where(function ($subQuery) use ($searchTerm, $keywords) {
+                // Match complete words only using word boundaries for the full search term
+                $subQuery->whereRaw("LOWER(name) REGEXP ?", ["\\b{$searchTerm}\\b"])
+                    ->orWhereRaw("LOWER(name) LIKE ?", ["{$searchTerm}%"])
+                    ->orWhereRaw("LOWER(code) LIKE ?", ["{$searchTerm}%"]);
 
-                // Match each keyword separately
+                // Match each keyword separately with word boundaries
                 foreach ($keywords as $word) {
                     if (!empty($word)) {
-                        $subQuery->orWhereRaw("LOWER(name) LIKE ?", ["%" . $word . "%"]);
+                        $subQuery->orWhereRaw("LOWER(name) REGEXP ?", ["\\b{$word}\\b"]);
+                        $subQuery->orWhereRaw("LOWER(name) LIKE ?", ["{$word}%"]);
                     }
                 }
             });

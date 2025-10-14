@@ -968,7 +968,7 @@ const downloadPdf = async () => {
   // Footer
   currentY += 20;
   pdf.setFont('helvetica', 'italic', 'bold');
-  const validText = `The Quotation is Valid only: ${validUntilDate.value || 'Not Specified'}`;
+  const validText = `The Quotation is valid 14 days only. ${validUntilDate.value || ''}`;
   pdf.text(validText, 10, currentY);
 
   currentY += 8;

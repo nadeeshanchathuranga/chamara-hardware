@@ -113,14 +113,176 @@
                 </div>
               </div>
 
-              <div>
-                <label for="description" class="block mb-2 text-lg font-medium">Description:</label>
-                <input
-                  v-model="form.description"
-                  id="description"
-                  name="description"
-                  class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+
+              <div class="space-y-6 mt-6 w-full">
+                 <div class="flex items-center w-full py-4 border-b border-black" v-for="item in products"
+                    :key="item.id">
+                    <div class="flex w-1/6">
+                        <img :src="item.image ? `/${item.image}` : '/images/placeholder.jpg'
+                            " alt="Supplier Image" class="object-cover w-16 h-16 border border-gray-500" />
+                    </div>
+                    <div class="flex flex-col justify-between w-5/6">
+                        <p class="text-xl text-black">
+                            {{ item.name }}
+                        </p>
+                        <div class="flex items-center justify-between w-full">
+                            <div class="flex space-x-4">
+                                <p @click="incrementQuantity(item.id)"
+                                    class="flex items-center justify-center w-8 h-8 text-white bg-black rounded cursor-pointer">
+                                    <i class="ri-add-line"></i>
+                                </p>
+
+                                <input type="number" v-model="item.quantity" min="0"
+                                    class="bg-[#D9D9D9] border-2 border-black h-8 w-24 text-black flex justify-center items-center rounded text-center" />
+                                <p @click="decrementQuantity(item.id)"
+                                    class="flex items-center justify-center w-8 h-8 text-white bg-black rounded cursor-pointer">
+                                    <i class="ri-subtract-line"></i>
+                                </p>
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <div>
+                                    <p @click="applyDiscount(item.id)" v-if="
+                                        item.discount &&
+                                        item.discount > 0 &&
+                                        item.apply_discount == false &&
+                                        !appliedCoupon
+                                    "
+                                        class="cursor-pointer py-1 text-center px-4 bg-green-600 rounded-xl font-bold text-white tracking-wider">
+                                        Apply {{ item.discount }}% off
+                                    </p>
+
+                                    <p v-if="
+                                        item.discount &&
+                                        item.discount > 0 &&
+                                        item.apply_discount == true &&
+                                        !appliedCoupon
+                                    " @click="removeDiscount(item.id)"
+                                        class="cursor-pointer py-1 text-center px-4 bg-red-600 rounded-xl font-bold text-white tracking-wider">
+                                        Remove {{ item.discount }}% Off
+                                    </p>
+
+                                    <input
+  v-model="item.selling_price"
+  type="number"
+  min="0"
+  class="w-40 m-2 text-right px-2 py-1 border-2 border-black rounded text-black font-bold text-xl"
+  @input="item.selling_price = parseFloat(item.selling_price) || 0"
+/>
+
+                                    <div class="flex items-center space-x-2">
+                                      <input
+                                        type="number"
+                                        v-model.number="item.discount"
+                                        min="0"
+                                        placeholder="Value"
+                                        @input="onDiscountChange(item)"
+                                        class="w-24 h-10 px-2 py-1 text-black text-center border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                      />
+                                      <select
+                                        v-model="item.discount_type"
+                                        @change="onDiscountChange(item)"
+                                        class="h-10 px-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                                      >
+                                        <option value="percent">%</option>
+                                        <option value="fixed">Rs</option>
+                                      </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end w-1/6">
+                        <p @click="removeProduct(item.id)"
+                            class="text-3xl text-black border-2 border-black rounded-full cursor-pointer">
+                            <i class="ri-close-line"></i>
+                        </p>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="description" class="block mb-2 text-lg font-medium">Description:</label>
+                    <input
+                    v-model="form.description"
+                    id="description"
+                    name="description"
+                    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                <!-- <div>
+                    <label for="description_price" class="block mb-2 text-lg font-medium">Price:</label>
+                    <input
+                    v-model="description_price"
+                    id="description_price"
+                    name="description_price"
+                    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+                <div>
+                    <label for="add_discount" class="block mb-2 text-lg font-medium">Discount:</label>
+                    <div class="flex space-x-2">
+                        <input
+                        v-model="add_discount"
+                        id="add_discount"
+                        name="add_discount"
+                        type="number"
+                        min="0"
+                        class="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <select
+                        v-model="add_discount_type"
+                        class="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="percent">%</option>
+                            <option value="fixed">Rs</option>
+                        </select>
+                    </div>
+                </div> -->
+
+                <div>
+                    <label for="valid_date" class="block mb-2 text-lg font-medium">Valid Date:</label>
+                    <input
+                    v-model="form.valid_date"
+                    id="valid_date"
+                    name="valid_date"
+                    type="date"
+                    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+
+
+                <!-- Client Name -->
+<div>
+  <label for="client_name" class="block mb-2 text-lg font-medium">Client Name:</label>
+  <input
+    v-model="form.client_name"
+    id="client_name"
+    name="client_name"
+    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+    placeholder="Enter client name"
+  />
+</div>
+
+<!-- Client Address -->
+<div>
+  <label for="client_address" class="block mb-2 text-lg font-medium">Client Address:</label>
+  <textarea
+    v-model="form.client_address"
+    id="client_address"
+    name="client_address"
+    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+    placeholder="Enter client address"
+    rows="2"
+  ></textarea>
+</div>
+
+
+                <button
+                  class="pr-4"
+                   @click="addQuotation"
+                  style="background-color: lightgreen; border: 2px solid #4CAF50; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 15px; transition: opacity 0.3s;"
+                >
+                  Add Quotation
+                </button>
               </div>
               <div>
                 <label for="description_price" class="block mb-2 text-lg font-medium">Price:</label>
@@ -219,20 +381,26 @@
                     <tr>
                       <th class="px-4 py-2 text-left text-sm font-medium">Product</th>
                       <th class="px-4 py-2 text-right text-sm font-medium">Quantity</th>
+                      <th class="px-4 py-2 text-right text-sm font-medium">Discount</th>
                       <th class="px-4 py-2 text-right text-sm font-medium">Unit Price</th>
                       <th class="px-4 py-2 text-right text-sm font-medium">Sub Total</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    <tr v-for="item in products" :key="item.id">
-                      <td class="px-4 py-2 text-gray-800 text-sm">{{ item.name }}</td>
-                      <td class="px-4 py-2 text-gray-800 text-right text-sm">{{ item.quantity }}</td>
-                      <td class="px-4 py-2 text-gray-800 text-right text-sm">{{ item.selling_price }}</td>
-                      <td class="px-4 py-2 text-gray-800 text-right text-sm">
-                        {{ (item.selling_price * item.quantity).toFixed(2) }}
-                      </td>
-                    </tr>
-                  </tbody>
+                        <tbody>
+                            <tr v-for="(item) in products" :key="item.id">
+                                <td class="px-4 py-2 text-gray-800 text-sm">{{ item.name }}</td>
+                                <td class="px-4 py-2 text-gray-800 text-right text-sm">{{ item.quantity }}</td>
+                                <td class="px-4 py-2 text-gray-800 text-right text-sm">
+                                    <span v-if="item.apply_discount && item.discount > 0" class="text-red-600">
+                                        -{{ item.discount }}{{ item.discount_type === 'percent' ? '%' : ' Rs' }}
+                                    </span>
+                                    <span v-else class="text-gray-400">-</span>
+                                </td>
+                                <td class="px-4 py-2 text-gray-800 text-right text-sm">{{ item.apply_discount && item.discounted_price != null ? item.discounted_price : item.selling_price }}</td>                                <td class="px-4 py-2 text-gray-800 text-right text-sm">
+                                {{ ((item.apply_discount && item.discounted_price != null ? item.discounted_price : item.selling_price) * item.quantity).toFixed(2) }}
+                                </td>
+                            </tr>
+                            </tbody>
                 </table>
               </div>
             </div>
@@ -241,18 +409,21 @@
               <h3 class="text-lg font-semibold text-gray-800 mb-3">Summary</h3>
               <div class="grid grid-cols-2 gap-4">
                 <p class="text-sm text-gray-500">Product Total:</p>
-                <p class="text-right text-sm font-semibold text-gray-800">{{ total }}</p>
+                <p class="text-right text-sm font-semibold text-gray-800">Rs. {{total}}</p>
+                <p v-if="parseFloat(itemDiscounts) > 0" class="text-sm text-gray-500">Item Discounts:</p>
+                <p v-if="parseFloat(itemDiscounts) > 0" class="text-right text-sm font-semibold text-gray-800 text-red-600">
+                - Rs. {{ itemDiscounts }}
+                </p>
+                <p v-if="parseFloat(formDiscount) > 0" class="text-sm text-gray-500">Form Discount ({{ add_discount }}{{ add_discount_type === 'percent' ? '%' : ' Rs' }}):</p>
+                <p v-if="parseFloat(formDiscount) > 0" class="text-right text-sm font-semibold text-gray-800 text-red-600">
+                - Rs. {{ formDiscount }}
+                </p>
+                <p v-if="description && description.trim() !== ''" class="text-sm text-gray-500">{{ description }}:</p>
+                <p v-if="description && description.trim() !== ''" class="text-right text-sm font-semibold text-gray-800">+ Rs. {{ description_price || '0.00' }}</p>
+                <p class="text-sm text-gray-500 font-bold">Grand Quotation Total:</p>
+                <p class="text-right text-sm font-semibold text-gray-800 font-bold">Rs. {{ totalquotation }}</p>
 
-                <template v-if="parseFloat(totalDiscount) > 0">
-                  <p class="text-sm text-gray-500">Discount:</p>
-                  <p class="text-right text-sm font-semibold text-gray-800">{{ totalDiscount }}</p>
-                </template>
 
-                <p class="text-sm text-gray-500">{{ description || ' ' }}</p>
-                <p class="text-right text-sm font-semibold text-gray-800">{{ description_price }}</p>
-
-                <p class="text-sm text-gray-500">Grand Quotation Total:</p>
-                <p class="text-right text-sm font-semibold text-gray-800">{{ totalquotation }}</p>
               </div>
             </div>
 
@@ -311,6 +482,50 @@ const validUntilDate = ref("");
 const description = ref("");
 const description_price = ref("");
 const add_discount = ref("");
+const add_discount_type = ref("percent");
+
+
+
+
+// helpers for manual discount like POS
+const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
+
+const onDiscountChange = (item) => {
+    if (!item.original_price) {
+        item.original_price = Number(item.selling_price);
+    }
+
+    const original = Number(item.original_price) || 0;
+    if (!item.discount_type) item.discount_type = 'percent';
+
+    let d = Number(item.discount);
+    if (Number.isNaN(d)) d = 0;
+
+    if (item.discount_type === 'percent') {
+        d = clamp(d, 0, 100);
+        item.discount = d;
+        if (d === 0) {
+            item.apply_discount = false;
+            item.discounted_price = original;
+        } else {
+            item.apply_discount = true;
+            const price = original * (1 - d / 100);
+            item.discounted_price = Number(price.toFixed(2));
+        }
+    } else {
+        d = clamp(d, 0, original);
+        item.discount = d;
+        if (d === 0) {
+            item.apply_discount = false;
+            item.discounted_price = original;
+        } else {
+            item.apply_discount = true;
+            const price = original - d;
+            item.discounted_price = Number(price.toFixed(2));
+        }
+    }
+};
+
 
 const handleModalOpenUpdate = (newValue) => {
   isSuccessModalOpen.value = newValue;
@@ -402,32 +617,51 @@ const subtotal = computed(() =>
     .toFixed(2)
 );
 
-const totalDiscount = computed(() => {
-  const productDiscount = products.value.reduce((total, item) => {
-    if (item.discount && item.discount > 0 && item.apply_discount === true) {
-      const discountAmount =
-        (parseFloat(item.selling_price) - parseFloat(item.discounted_price)) * item.quantity;
-      return total + discountAmount;
+// Individual item discounts (for display purposes)
+const itemDiscounts = computed(() => {
+    return products.value.reduce((total, item) => {
+        if (item.discount && item.discount > 0 && item.apply_discount == true) {
+            const originalPrice = parseFloat(item.selling_price);
+            const discountedPrice = parseFloat(item.discounted_price);
+            const discountAmount = (originalPrice - discountedPrice) * item.quantity;
+            return total + discountAmount;
+        }
+        return total;
+    }, 0).toFixed(2);
+});
+
+// Form-level discount applied to Product Total
+const formDiscount = computed(() => {
+    const discountValue = parseFloat(add_discount.value) || 0;
+    const productTotalValue = parseFloat(total.value) || 0;
+    
+    if (discountValue <= 0) return "0.00";
+    
+    if (add_discount_type.value === 'percent') {
+        return (productTotalValue * discountValue / 100).toFixed(2);
+    } else {
+        // Fixed amount - don't exceed the product total
+        return Math.min(discountValue, productTotalValue).toFixed(2);
     }
-    return total;
-  }, 0);
-
-  const couponDiscount = appliedCoupon.value ? Number(appliedCoupon.value.discount) : 0;
-  const additionalDiscount = parseFloat(add_discount.value) || 0;
-
-  return (productDiscount + couponDiscount + additionalDiscount).toFixed(2);
 });
 
 const total = computed(() => {
-  const subtotalValue = parseFloat(subtotal.value) || 0;
-  return subtotalValue.toFixed(2);
+    return products.value
+        .reduce((total, item) => {
+            const itemPrice = item.apply_discount && item.discounted_price != null 
+                ? item.discounted_price 
+                : item.selling_price;
+            return total + (parseFloat(itemPrice) * item.quantity);
+        }, 0)
+        .toFixed(2);
 });
 
 const totalquotation = computed(() => {
-  const subtotalValue = parseFloat(subtotal.value) || 0;
-  const discountValue = parseFloat(totalDiscount.value) || 0;
-  const customAdditional = parseFloat(description_price.value) || 0;
-  return (subtotalValue + customAdditional - discountValue).toFixed(2);
+    const productTotalValue = parseFloat(total.value) || 0;
+    const formDiscountValue = parseFloat(formDiscount.value) || 0;
+    const descriptionPriceValue = parseFloat(description_price.value) || 0;
+
+    return (productTotalValue + descriptionPriceValue - formDiscountValue).toFixed(2);
 });
 
 const form = useForm({
@@ -452,9 +686,93 @@ const submitCoupon = async () => {
     const response = await axios.post(route("pos.getCoupon"), { code: couponForm.code });
     const { coupon: fetchedCoupon, error: fetchedError } = response.data;
 
-    if (fetchedCoupon) {
-      appliedCoupon.value = fetchedCoupon;
-      products.value.forEach((p) => (p.apply_discount = false));
+        const { coupon: fetchedCoupon, error: fetchedError } = response.data;
+
+        if (fetchedCoupon) {
+            appliedCoupon.value = fetchedCoupon;
+            products.value.forEach((product) => {
+                product.apply_discount = false;
+            });
+        } else {
+            isAlertModalOpen.value = true;
+            message.value = fetchedError;
+            error.value = fetchedError;
+        }
+    } catch (err) {
+        // console.error(error);
+        if (err.response.status === 422) {
+            isAlertModalOpen.value = true;
+            message.value = err.response.data.message;
+        }
+    }
+};
+
+// Automatically submit the barcode to the backend
+const submitBarcode = async () => {
+    try {
+        // Send POST request to the backend
+        const response = await axios.post(route("pos.getProduct"), {
+            barcode: form.barcode, // Send the barcode field
+        });
+
+        // Extract the response data
+        const { product: fetchedProduct, error: fetchedError } = response.data;
+
+        if (fetchedProduct) {
+            if (fetchedProduct.stock_quantity < 1) {
+                isAlertModalOpen.value = true;
+                message.value = "Product is out of stock";
+                return;
+            }
+            // Check if the product already exists in the products array
+            const existingProduct = products.value.find(
+                (item) => item.id === fetchedProduct.id
+            );
+
+            if (existingProduct) {
+                // If it exists, increment the quantity
+                existingProduct.quantity += 1;
+            } else {
+                // If it doesn't exist, add it to the products array with quantity 1
+                products.value.push({
+                    ...fetchedProduct,
+                    quantity: 1,
+                    discount_type: 'percent',
+                    apply_discount: false, // Add the new attribute
+                });
+            }
+
+            product.value = fetchedProduct; // Update product state for individual display
+            error.value = null; // Clear any previous errors
+            console.log(
+                "Product fetched successfully and added to cart:",
+                fetchedProduct
+            );
+        } else {
+            isAlertModalOpen.value = true;
+            message.value = fetchedError;
+            error.value = fetchedError; // Set the error message
+            console.error("Error:", fetchedError);
+        }
+    } catch (err) {
+        if (err.response.status === 422) {
+            isAlertModalOpen.value = true;
+            message.value = err.response.data.message;
+        }
+
+        console.error("An error occurred:", err.response?.data || err.message);
+        error.value = "An unexpected error occurred. Please try again.";
+    }
+};
+
+// Handle input from the barcode scanner
+const handleScannerInput = (event) => {
+    clearTimeout(timeout); // Clear the timeout for each keypress
+    if (event.key === "Enter") {
+        // Barcode scanning completed
+        form.barcode = barcode; // Set the scanned barcode into the form
+        submitBarcode(); // Automatically submit the barcode
+        barcode = ""; // Reset the barcode for the next scan
     } else {
       isAlertModalOpen.value = true;
       message.value = fetchedError;
@@ -540,7 +858,8 @@ const handleSelectedProducts = (selectedProducts) => {
       products.value.push({
         ...fetchedProduct,
         quantity: 1,
-        apply_discount: false,
+        discount_type: 'percent',
+        apply_discount: false, // Default additional attribute
       });
   });
 };
@@ -575,7 +894,9 @@ const downloadPdf = async () => {
   // Logo (top-right)
   try {
     const logoImg = new Image();
-    logoImg.crossOrigin = "Anonymous";
+    logoImg.src = '/images/billlogo.png';
+    logoImg.crossOrigin = 'Anonymous';
+
     await new Promise((resolve, reject) => {
       logoImg.onload = resolve;
       logoImg.onerror = reject;
@@ -598,9 +919,15 @@ const downloadPdf = async () => {
 
   // Right-side contact details (white)
   const contactDetails = [
-    { text: "077 477 2910 | 011 218 9778", icon: "/images/phone-icon.png" },
-    { text: "chamarahwts@gmail.com", icon: "/images/web-icon.png" },
-    { text: "No 51/62, Rukmale, Pannipitiya", icon: "/images/location-icon.png" },
+    {
+      text:  '0774772910 | 0112189778',
+      icon: '/images/phone-icon.png',
+    },
+    
+    {
+      text:  'No 51/62, Rukmale, Pannipitiya',
+      icon: '/images/location-icon.png',
+    },
   ];
   let contactY = 23;
   const contactX = pageWidth - 95;
@@ -699,22 +1026,17 @@ const downloadPdf = async () => {
   pdf.line(col.unit.x, tableTopY, col.unit.x, tableTopY + headerH);
   pdf.line(col.total.x, tableTopY, col.total.x, tableTopY + headerH);
 
-  let y = tableTopY + headerH;
-  pdf.setFont("helvetica", "normal");
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Product', 25, startY + 7, { align: 'center' });
+  pdf.text('Qty', 80, startY + 7, { align: 'center' });
+  pdf.text('Discount', 105, startY + 7, { align: 'center' });
+  pdf.text('Unit Price', 140, startY + 7, { align: 'center' });
+  pdf.text('Total', 175, startY + 7, { align: 'center' });
 
-  const drawHeaderOnNewPage = () => {
-    pdf.setFillColor(240, 240, 240);
-    pdf.rect(marginX, 20, pageWidth - 20, headerH, "FD");
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Product", col.product.x + col.product.w / 2, 27, { align: "center" });
-    pdf.text("Quantity", col.qty.x + col.qty.w / 2, 27, { align: "center" });
-    pdf.text("Unit Price", col.unit.x + col.unit.w / 2, 27, { align: "center" });
-    pdf.text("Total", col.total.x + col.total.w / 2, 27, { align: "center" });
-    pdf.line(col.qty.x, 20, col.qty.x, 20 + headerH);
-    pdf.line(col.unit.x, 20, col.unit.x, 20 + headerH);
-    pdf.line(col.total.x, 20, col.total.x, 20 + headerH);
-    y = 20 + headerH;
-  };
+  pdf.line(55, startY, 55, startY + 10);
+  pdf.line(95, startY, 95, startY + 10);
+  pdf.line(125, startY, 125, startY + 10);
+  pdf.line(160, startY, 160, startY + 10);
 
   const addPageIfNeeded = (neededHeight) => {
     if (y + neededHeight > pageBottom) {
@@ -729,15 +1051,30 @@ const downloadPdf = async () => {
     const lines = Array.isArray(wrappedName) ? wrappedName.length : 1;
     const rowH = Math.max(headerH, lines * lineH + cellPadY);
 
-    addPageIfNeeded(rowH);
+    pdf.rect(10, currentY, pageWidth - 20, rowHeight, 'D');
+    pdf.line(55, currentY, 55, currentY + rowHeight);
+    pdf.line(95, currentY, 95, currentY + rowHeight);
+    pdf.line(125, currentY, 125, currentY + rowHeight);
+    pdf.line(160, currentY, 160, currentY + rowHeight);
 
-    pdf.rect(marginX, y, pageWidth - 20, rowH, "D");
-    pdf.line(col.qty.x, y, col.qty.x, y + rowH);
-    pdf.line(col.unit.x, y, col.unit.x, y + rowH);
-    pdf.line(col.total.x, y, col.total.x, y + rowH);
+    const itemName = item.name || 'Unnamed Product';
+    const quantity = item.quantity?.toString() || '0';
+    const discount = item.apply_discount && item.discount > 0 
+      ? `${item.discount}${item.discount_type === 'percent' ? '%' : 'Rs'}` 
+      : '-';
+    const price = (item.apply_discount && item.discounted_price != null 
+      ? item.discounted_price 
+      : item.selling_price)?.toString() || '0';
+    const subtotal = ((item.apply_discount && item.discounted_price != null 
+      ? item.discounted_price 
+      : item.selling_price) * item.quantity).toString();
 
     pdf.setTextColor(0, 0, 0);
-    pdf.text(wrappedName, col.product.x + cellPadX, y + cellPadY + 3);
+    pdf.text(itemName, 15, currentY + 7);
+    pdf.text(quantity, 80, currentY + 7, { align: 'center' });
+    pdf.text(discount, 105, currentY + 7, { align: 'center' });
+    pdf.text(price, 140, currentY + 7, { align: 'center' });
+    pdf.text(subtotal, 175, currentY + 7, { align: 'center' });
 
     const qty = (item.quantity ?? 0).toString();
     const unit = (Number(item.selling_price) || 0).toFixed(2);
@@ -760,32 +1097,35 @@ const downloadPdf = async () => {
     const rowH = Math.max(headerH, descLines * lineH + cellPadY);
     addPageIfNeeded(rowH);
 
-    pdf.rect(marginX, y, pageWidth - 20, rowH, "D");
-    pdf.line(col.unit.x, y, col.unit.x, y + rowH);
-    pdf.text(descText, marginX + cellPadX, y + cellPadY + 3);
-    pdf.text((description_price.value || "0").toString(), col.total.x + col.total.w / 2, y + rowH / 2 + 2, {
-      align: "center",
-    });
-
-    y += rowH;
+    pdf.rect(10, currentY, pageWidth - 20, rowHeight, 'D');
+    pdf.line(55, currentY, 55, currentY + rowHeight);
+    pdf.line(95, currentY, 95, currentY + rowHeight);
+    pdf.line(125, currentY, 125, currentY + rowHeight);
+    pdf.line(160, currentY, 160, currentY + rowHeight);
+    pdf.text(description.value, 15, currentY + 7);
+    pdf.text('-', 105, currentY + 7, { align: 'center' }); // No discount for description
+    pdf.text('-', 140, currentY + 7, { align: 'center' }); // No unit price for description
+    pdf.text(description_price.value || '0', 175, currentY + 7, { align: 'center' });
+    currentY += rowHeight;
   }
 
-  // Grand Total row
-  const gtRowH = headerH;
-  addPageIfNeeded(gtRowH);
-  pdf.rect(marginX, y, pageWidth - 20, gtRowH, "D");
-  pdf.line(col.unit.x, y, col.unit.x, y + gtRowH);
-  pdf.setFont("helvetica", "bold");
-  pdf.text("Grand Total", col.qty.x + col.qty.w / 2, y + gtRowH / 2 + 2, { align: "center" });
-  pdf.text((totalquotation.value ?? 0).toString(), col.total.x + col.total.w / 2, y + gtRowH / 2 + 2, {
-    align: "center",
-  });
+  // Grand Total
+  pdf.rect(10, currentY, pageWidth - 20, rowHeight, 'D');
+  pdf.line(55, currentY, 55, currentY + rowHeight);
+  pdf.line(95, currentY, 95, currentY + rowHeight);
+  pdf.line(125, currentY, 125, currentY + rowHeight);
+  pdf.line(160, currentY, 160, currentY + rowHeight);
+  pdf.setFont('helvetica', 'bold');
+  pdf.text('Grand Total', 15, currentY + 7);
+  pdf.text('-', 105, currentY + 7, { align: 'center' }); // No discount for grand total
+  pdf.text('-', 140, currentY + 7, { align: 'center' }); // No unit price for grand total
+  pdf.text(totalquotation.value?.toString() || '0', 175, currentY + 7, { align: 'center' });
 
   // Footer
-  y += 20;
-  pdf.setFont("helvetica", "italic", "bold");
-  const validText = `The Quotation is Valid only: ${validUntilDate.value || "Not Specified"}`;
-  pdf.text(validText, 10, y);
+  currentY += 20;
+  pdf.setFont('helvetica', 'italic', 'bold');
+  const validText = `The Quotation is valid 14 days only. ${validUntilDate.value || ''}`;
+  pdf.text(validText, 10, currentY);
 
   y += 8;
   pdf.setFont("helvetica", "italic");

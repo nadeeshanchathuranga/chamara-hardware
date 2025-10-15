@@ -41,17 +41,8 @@ class ProductController extends Controller
     $stockStatus      = $request->input('stockStatus');
     $selectedCategory = $request->input('selectedCategory');
 
-    // Normalize search: lower + remove spaces (so "10 ft" == "10ft")
-    $normalized = Str::of($rawQuery)->lower()->replace(' ', '')->toString();
-
     $productsQuery = Product::with(['category', 'color', 'size', 'supplier','unit'])
-        ->when($rawQuery !== '', function ($qb) use ($normalized) {
-            $qb->where(function ($sub) use ($normalized) {
-                // Compare with spaces removed, case-insensitive
-                $sub->whereRaw("REPLACE(LOWER(name), ' ', '') LIKE ?", ["%{$normalized}%"])
-                    ->orWhereRaw("REPLACE(LOWER(code), ' ', '') LIKE ?", ["%{$normalized}%"]);
-            });
-        })
+        ->flexibleSearch($rawQuery)
         ->when($selectedColor, function ($qb) use ($selectedColor) {
             $qb->whereHas('color', fn($q) => $q->where('name', $selectedColor));
         })
@@ -95,24 +86,7 @@ class ProductController extends Controller
     $selectedCategory = $request->input('selectedCategory');
 
     $productsQuery = Product::with('category', 'color', 'size', 'supplier')
-        ->when($query, function ($queryBuilder) use ($query) {
-            $normalizedSearch = str_replace(' ', '', strtolower($query)); 
-            $keywords = preg_split('/\s+/', strtolower($query)); // split by spaces
-
-            $queryBuilder->where(function ($subQuery) use ($query, $normalizedSearch, $keywords) {
-                // Full phrase / normalized search
-                $subQuery->whereRaw("LOWER(name) LIKE ?", ["%" . strtolower($query) . "%"])
-                    ->orWhereRaw("REPLACE(LOWER(name), ' ', '') LIKE ?", ["%" . $normalizedSearch . "%"])
-                    ->orWhereRaw("LOWER(code) LIKE ?", ["%" . strtolower($query) . "%"]);
-
-                // Match each keyword separately
-                foreach ($keywords as $word) {
-                    if (!empty($word)) {
-                        $subQuery->orWhereRaw("LOWER(name) LIKE ?", ["%" . $word . "%"]);
-                    }
-                }
-            });
-        })
+        ->flexibleSearch($query)
         ->when($selectedColor, function ($queryBuilder) use ($selectedColor) {
             $queryBuilder->whereHas('color', function ($colorQuery) use ($selectedColor) {
                 $colorQuery->whereRaw("LOWER(name) = ?", [strtolower($selectedColor)]);

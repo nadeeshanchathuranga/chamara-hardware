@@ -59,9 +59,15 @@ class QuotationController extends Controller
             'barcode' => 'required',
         ]);
 
+        // First try exact match on barcode/code
         $product = Product::where('barcode', $request->barcode)
             ->orWhere('code', $request->barcode)
             ->first();
+
+        // If no exact match, try flexible search (for manual product search)
+        if (!$product) {
+            $product = Product::flexibleSearch($request->barcode)->first();
+        }
 
         return response()->json([
             'product' => $product,

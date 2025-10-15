@@ -41,19 +41,8 @@ class ProductController extends Controller
     $stockStatus      = $request->input('stockStatus');
     $selectedCategory = $request->input('selectedCategory');
 
-    // Normalize search: lower + remove spaces (so "10 ft" == "10ft")
-    $normalized = Str::of($rawQuery)->lower()->replace(' ', '')->toString();
-
     $productsQuery = Product::with(['category', 'color', 'size', 'supplier','unit'])
-        ->when($rawQuery !== '', function ($qb) use ($rawQuery) {
-            $searchTerm = strtolower(trim($rawQuery));
-            $qb->where(function ($sub) use ($searchTerm) {
-                // Match complete words only using word boundaries
-                $sub->whereRaw("LOWER(name) REGEXP ?", ["\\b{$searchTerm}\\b"])
-                    ->orWhereRaw("LOWER(name) LIKE ?", ["{$searchTerm}%"])
-                    ->orWhereRaw("LOWER(code) LIKE ?", ["{$searchTerm}%"]);
-            });
-        })
+        ->flexibleSearch($rawQuery)
         ->when($selectedColor, function ($qb) use ($selectedColor) {
             $qb->whereHas('color', fn($q) => $q->where('name', $selectedColor));
         })
@@ -97,25 +86,7 @@ class ProductController extends Controller
     $selectedCategory = $request->input('selectedCategory');
 
     $productsQuery = Product::with('category', 'color', 'size', 'supplier')
-        ->when($query, function ($queryBuilder) use ($query) {
-            $searchTerm = strtolower(trim($query));
-            $keywords = preg_split('/\s+/', $searchTerm); // split by spaces
-
-            $queryBuilder->where(function ($subQuery) use ($searchTerm, $keywords) {
-                // Match complete words only using word boundaries for the full search term
-                $subQuery->whereRaw("LOWER(name) REGEXP ?", ["\\b{$searchTerm}\\b"])
-                    ->orWhereRaw("LOWER(name) LIKE ?", ["{$searchTerm}%"])
-                    ->orWhereRaw("LOWER(code) LIKE ?", ["{$searchTerm}%"]);
-
-                // Match each keyword separately with word boundaries
-                foreach ($keywords as $word) {
-                    if (!empty($word)) {
-                        $subQuery->orWhereRaw("LOWER(name) REGEXP ?", ["\\b{$word}\\b"]);
-                        $subQuery->orWhereRaw("LOWER(name) LIKE ?", ["{$word}%"]);
-                    }
-                }
-            });
-        })
+        ->flexibleSearch($query)
         ->when($selectedColor, function ($queryBuilder) use ($selectedColor) {
             $queryBuilder->whereHas('color', function ($colorQuery) use ($selectedColor) {
                 $colorQuery->whereRaw("LOWER(name) = ?", [strtolower($selectedColor)]);

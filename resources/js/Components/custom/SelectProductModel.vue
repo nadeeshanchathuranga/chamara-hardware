@@ -101,6 +101,18 @@
                     {{ colorOption.name }}
                   </option>
                 </select>
+                
+                <!-- Supplier filter -->
+                <select
+                  v-model="selectedSupplier"
+                  @change="() => fetchProducts()"
+                  class="px-6 py-3 text-xl font-normal tracking-wider text-blue-600 bg-white rounded-lg cursor-pointer custom-select"
+                >
+                  <option value="">Filter by Supplier</option>
+                  <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
+                    {{ supplier.name }}
+                  </option>
+                </select>
                 <select
                   v-model="size"
                   @change="() => fetchProducts()"
@@ -392,6 +404,7 @@ const stockStatus = ref("");
 const sort = ref("");
 const color = ref("");
 const size = ref("");
+const selectedSupplier = ref("");
 
 const selectedProducts = ref([]);
 
@@ -415,6 +428,7 @@ const resetFilters = () => {
   sort.value = "";
   color.value = "";
   size.value = "";
+  selectedSupplier.value = "";
 
   fetchProducts();
 };
@@ -427,7 +441,7 @@ const playClickSound = () => {
 const emit = defineEmits(["update:open", "selected-products"]);
 
 // Props for the modal
-const { open, allcategories, colors, sizes } = defineProps({
+const { open, allcategories, colors, sizes, suppliers } = defineProps({
   open: {
     type: Boolean,
     required: true,
@@ -435,6 +449,7 @@ const { open, allcategories, colors, sizes } = defineProps({
   allcategories: Array,
   colors: Array,
   sizes: Array,
+  suppliers: Array,
 });
 
 // Form for handling deletion
@@ -460,6 +475,7 @@ const fetchProducts = async (url = "/api/products") => {
       sort: sort.value,
       color: color.value,
       size: size.value,
+      supplier: selectedSupplier.value,
     });
     products.value = response.data.products;
   } catch (error) {

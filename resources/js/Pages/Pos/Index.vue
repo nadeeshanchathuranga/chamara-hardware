@@ -431,7 +431,7 @@
         :custom_discount="custom_discount" :paymentMethod="selectedPaymentMethod" :kokoSurcharge="kokoSurcharge" />
     <AlertModel v-model:open="isAlertModalOpen" :message="message" />
 
-    <SelectProductModel v-model:open="isSelectModalOpen" :allcategories="allcategories" :colors="colors" :sizes="sizes"
+    <SelectProductModel v-model:open="isSelectModalOpen" :allcategories="allcategories" :colors="colors" :sizes="sizes" :suppliers="suppliers"
         @selected-products="handleSelectedProducts" />
 
     <Footer />
@@ -657,6 +657,7 @@ const props = defineProps({
         type: Array,
         default: () => []
     },
+    suppliers: { type: Array, default: () => [] },
 });
 
 const sales = ref([]);

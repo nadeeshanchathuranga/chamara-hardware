@@ -187,6 +187,18 @@
             </option>
           </select>
 
+          <!-- Supplier Filter -->
+          <select
+            v-model="selectedSupplier"
+            @change="applyFilters"
+            class="px-6 py-3 text-xl font-normal tracking-wider text-blue-600 bg-white rounded-lg custom-select"
+          >
+            <option value="">Filter by Supplier</option>
+            <option v-for="supplier in props.suppliers" :key="supplier.id" :value="supplier.id">
+              {{ supplier.name }}
+            </option>
+          </select>
+
           <Link
             href="/products"
             class="px-6 py-3 text-xl font-normal tracking-wider text-white text-center bg-blue-600 rounded-lg custom-select"
@@ -504,6 +516,7 @@ const sort = ref(props.sort || "");
 const color = ref(props.color || "");
 const size = ref(props.size || "");
 const suppliers = ref(props.suppliers || "");
+const selectedSupplier = ref("");
 const stockStatus = ref(props.stockStatus || "");
 const selectedCategory = ref(props.selectedCategory || "");
 
@@ -519,6 +532,7 @@ const applyFilters = (page) => {
       sort: sort.value,
       color: color.value,
       size: size.value,
+        supplier: selectedSupplier.value,
       stockStatus: stockStatus.value,
       selectedCategory: selectedCategory.value,
     },
@@ -566,6 +580,7 @@ const navigateTo = (url) => {
       sort: sort.value,
       color: color.value,
       size: size.value,
+        supplier: selectedSupplier.value,
       stockStatus: stockStatus.value,
       selectedCategory: selectedCategory.value,
     },

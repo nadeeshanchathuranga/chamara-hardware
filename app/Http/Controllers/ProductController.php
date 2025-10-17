@@ -40,6 +40,7 @@ class ProductController extends Controller
     $selectedSize     = $request->input('size');
     $stockStatus      = $request->input('stockStatus');
     $selectedCategory = $request->input('selectedCategory');
+    $selectedSupplier = $request->input('supplier');
 
     $productsQuery = Product::with(['category', 'color', 'size', 'supplier','unit'])
         ->flexibleSearch($rawQuery)
@@ -61,6 +62,9 @@ class ProductController extends Controller
         })
         ->when($selectedCategory, function ($qb) use ($selectedCategory) {
             $qb->where('category_id', $selectedCategory);
+        })
+        ->when($selectedSupplier, function ($qb) use ($selectedSupplier) {
+            $qb->where('supplier_id', $selectedSupplier);
         });
 
     // Order by name when searching, else by latest
@@ -84,6 +88,7 @@ class ProductController extends Controller
     $selectedSize = $request->input('size');
     $stockStatus = $request->input('stockStatus');
     $selectedCategory = $request->input('selectedCategory');
+    $selectedSupplier = $request->input('supplier');
 
     $productsQuery = Product::with('category', 'color', 'size', 'supplier')
         ->flexibleSearch($query)
@@ -109,6 +114,9 @@ class ProductController extends Controller
         })
         ->when($selectedCategory, function ($queryBuilder) use ($selectedCategory) {
             $queryBuilder->where('category_id', $selectedCategory); // Filter by category
+        })
+        ->when($selectedSupplier, function ($queryBuilder) use ($selectedSupplier) {
+            $queryBuilder->where('supplier_id', $selectedSupplier);
         });
 
     $count = $productsQuery->count();

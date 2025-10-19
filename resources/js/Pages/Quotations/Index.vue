@@ -330,13 +330,14 @@
         </div>
       </div>
     </div>
-    <SelectProductModel
-    v-model:open="isSelectModalOpen"
-    :allcategories="allcategories"
-    :colors="colors"
-    :sizes="sizes"
-    @selected-products="handleSelectedProducts"
-    />
+  <SelectProductModel
+  v-model:open="isSelectModalOpen"
+  :allcategories="allcategories"
+  :colors="colors"
+  :sizes="sizes"
+  :suppliers="suppliers"
+  @selected-products="handleSelectedProducts"
+  />
     <Footer />
 </template>
 
@@ -430,7 +431,8 @@ const props = defineProps({
     allemployee: Array,
     colors: Array,
     sizes: Array,
-    companyInfo : Array,
+  companyInfo : Array,
+  suppliers: { type: Array, default: () => [] },
 });
 
 const discount = ref(0);

@@ -36,7 +36,8 @@ class PosController extends Controller
         $colors = Color::orderBy('created_at', 'desc')->get();
         $sizes = Size::orderBy('created_at', 'desc')->get();
         $allemployee = Employee::orderBy('created_at', 'desc')->get();
-        $products = Product::with('unit')->orderBy('name', 'asc')->get(); // Add products in ascending order
+    $products = Product::with('unit')->orderBy('name', 'asc')->get(); // Add products in ascending order
+    $suppliers = \App\Models\Supplier::orderBy('created_at', 'desc')->get();
 
 
         // Render the page for GET requests
@@ -51,6 +52,7 @@ class PosController extends Controller
             'sales'=> $sales,
             'saleItems' => $saleItems,
             'products' => $products, // Add products to props
+            'suppliers' => $suppliers,
         ]);
     }
 
@@ -64,9 +66,15 @@ class PosController extends Controller
             'barcode' => 'required',
         ]);
 
+        // First try exact match on barcode/code
         $product = Product::where('barcode', $request->barcode)
             ->orWhere('code', $request->barcode)
             ->first();
+
+        // If no exact match, try flexible search (for manual product search)
+        if (!$product) {
+            $product = Product::flexibleSearch($request->barcode)->first();
+        }
 
         return response()->json([
             'product' => $product,

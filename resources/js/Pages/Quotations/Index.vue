@@ -28,7 +28,7 @@
           <div class="flex md:w-3/6 w-full p-8 border-4 border-black rounded-3xl">
             <div class="flex flex-col items-start justify-center w-full md:px-12">
               <div class="flex items-center justify-between w-full">
-                <h2 class="text-5xl font-bold text-black">Quotation </h2>
+                <h2 class="text-5xl font-bold text-black">Quotation1 </h2>
                  <span class="flex cursor-pointer" @click="isSelectModalOpen = true">
                     <p class="text-xl text-blue-600 font-bold">Product Manual</p>
                     <img src="/images/selectpsoduct.svg" class="w-6 h-6 ml-2" />
@@ -38,88 +38,107 @@
 
               <div class="space-y-6 mt-6 w-full">
                  <div class="flex items-center w-full py-4 border-b border-black" v-for="item in products"
-                    :key="item.id">
-                    <div class="flex w-1/6">
-                        <img :src="item.image ? `/${item.image}` : '/images/placeholder.jpg'
-                            " alt="Supplier Image" class="object-cover w-16 h-16 border border-gray-500" />
-                    </div>
-                    <div class="flex flex-col justify-between w-5/6">
-                        <p class="text-xl text-black">
-                            {{ item.name }}
-                        </p>
-                        <div class="flex items-center justify-between w-full">
-                            <div class="flex space-x-4">
-                                <p @click="incrementQuantity(item.id)"
-                                    class="flex items-center justify-center w-8 h-8 text-white bg-black rounded cursor-pointer">
-                                    <i class="ri-add-line"></i>
-                                </p>
+    :key="item.id">
+    <div class="flex w-1/6">
+        <img :src="item.image ? `/${item.image}` : '/images/placeholder.jpg'
+            " alt="Supplier Image" class="object-cover w-16 h-16 border border-gray-500" />
+    </div>
+    <div class="flex flex-col justify-between w-5/6">
+        <!-- Product name displayed in two lines -->
+        <p class="text-xl text-black line-clamp-2 min-h-[3rem]">
+            {{ item.name }}
+        </p>
+        <div class="flex items-center justify-between w-full">
+            <!-- Quantity controls and cost price section -->
+            <div class="flex items-center space-x-4">
+                <!-- Quantity controls -->
+                <div class="flex space-x-2">
+                    <p @click="decrementQuantity(item.id)"
+                        class="flex items-center justify-center w-8 h-8 text-white bg-black rounded cursor-pointer">
+                        <i class="ri-subtract-line"></i>
+                    </p>
+                    <input type="number" v-model="item.quantity" min="0"
+                        class="bg-[#D9D9D9] border-2 border-black h-8 w-24 text-black flex justify-center items-center rounded text-center" />
+                    <p @click="incrementQuantity(item.id)"
+                        class="flex items-center justify-center w-8 h-8 text-white bg-black rounded cursor-pointer">
+                        <i class="ri-add-line"></i>
+                    </p>
+                </div>
+                
+                <!-- Cost price aligned with quantity -->
+                <div class="ml-4" v-if="item.cost_price != null">
+                    <p class="text-sm text-gray-600">Cost:</p>
+                    <p @click="fetchNearSellingPrice(item)"
+                        class="text-sm font-semibold text-gray-800 cursor-pointer hover:text-blue-600"
+                        title="Click to fetch a suggested selling price based on cost">
+                        Rs. {{ item.cost_price }}
+                    </p>
+                </div>
+            </div>
 
-                                <input type="number" v-model="item.quantity" min="0"
-                                    class="bg-[#D9D9D9] border-2 border-black h-8 w-24 text-black flex justify-center items-center rounded text-center" />
-                                <p @click="decrementQuantity(item.id)"
-                                    class="flex items-center justify-center w-8 h-8 text-white bg-black rounded cursor-pointer">
-                                    <i class="ri-subtract-line"></i>
-                                </p>
-                            </div>
-                            <div class="flex items-center justify-center">
-                                <div>
-                                    <p @click="applyDiscount(item.id)" v-if="
-                                        item.discount &&
-                                        item.discount > 0 &&
-                                        item.apply_discount == false &&
-                                        !appliedCoupon
-                                    "
-                                        class="cursor-pointer py-1 text-center px-4 bg-green-600 rounded-xl font-bold text-white tracking-wider">
-                                        Apply {{ item.discount }}% off
-                                    </p>
+            <!-- Selling price and discount section -->
+            <div class="flex items-center justify-center">
+                <div>
+                    <!-- Discount apply/remove buttons -->
+                    <p @click="applyDiscount(item.id)" v-if="
+                        item.discount &&
+                        item.discount > 0 &&
+                        item.apply_discount == false &&
+                        !appliedCoupon
+                    "
+                        class="cursor-pointer py-1 text-center px-4 bg-green-600 rounded-xl font-bold text-white tracking-wider">
+                        Apply {{ item.discount }}% off
+                    </p>
 
-                                    <p v-if="
-                                        item.discount &&
-                                        item.discount > 0 &&
-                                        item.apply_discount == true &&
-                                        !appliedCoupon
-                                    " @click="removeDiscount(item.id)"
-                                        class="cursor-pointer py-1 text-center px-4 bg-red-600 rounded-xl font-bold text-white tracking-wider">
-                                        Remove {{ item.discount }}% Off
-                                    </p>
+                    <p v-if="
+                        item.discount &&
+                        item.discount > 0 &&
+                        item.apply_discount == true &&
+                        !appliedCoupon
+                    " @click="removeDiscount(item.id)"
+                        class="cursor-pointer py-1 text-center px-4 bg-red-600 rounded-xl font-bold text-white tracking-wider">
+                        Remove {{ item.discount }}% Off
+                    </p>
 
-                                    <input
-  v-model="item.selling_price"
-  type="number"
-  min="0"
-  class="w-40 m-2 text-right px-2 py-1 border-2 border-black rounded text-black font-bold text-xl"
-  @input="item.selling_price = parseFloat(item.selling_price) || 0"
-/>
+                    <!-- Selling price input -->
+                    <input
+                        v-model="item.selling_price"
+                        type="number"
+                        min="0"
+                        class="w-40 m-2 text-right px-2 py-1 border-2 border-black rounded text-black font-bold text-xl"
+                        @input="item.selling_price = parseFloat(item.selling_price) || 0"
+                    />
 
-                                    <div class="flex items-center space-x-2">
-                                      <input
-                                        type="number"
-                                        v-model.number="item.discount"
-                                        min="0"
-                                        placeholder="Value"
-                                        @input="onDiscountChange(item)"
-                                        class="w-24 h-10 px-2 py-1 text-black text-center border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                      />
-                                      <select
-                                        v-model="item.discount_type"
-                                        @change="onDiscountChange(item)"
-                                        class="h-10 px-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
-                                      >
-                                        <option value="percent">%</option>
-                                        <option value="fixed">Rs</option>
-                                      </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex justify-end w-1/6">
-                        <p @click="removeProduct(item.id)"
-                            class="text-3xl text-black border-2 border-black rounded-full cursor-pointer">
-                            <i class="ri-close-line"></i>
-                        </p>
+                    <!-- Discount controls -->
+                    <div class="flex items-center space-x-2">
+                        <input
+                            type="number"
+                            v-model.number="item.discount"
+                            min="0"
+                            placeholder="Value"
+                            @input="onDiscountChange(item)"
+                            class="w-24 h-10 px-2 py-1 text-black text-center border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <select
+                            v-model="item.discount_type"
+                            @change="onDiscountChange(item)"
+                            class="h-10 px-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
+                        >
+                            <option value="percent">%</option>
+                            <option value="fixed">Rs</option>
+                        </select>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="flex justify-end w-1/6">
+        <p @click="removeProduct(item.id)"
+            class="text-3xl text-black border-2 border-black rounded-full cursor-pointer">
+            <i class="ri-close-line"></i>
+        </p>
+    </div>
+</div>
 
                 <div>
                     <label for="description" class="block mb-2 text-lg font-medium">Description:</label>
@@ -288,8 +307,7 @@
                 <p v-if="parseFloat(formDiscount) > 0" class="text-right text-sm font-semibold text-gray-800 text-red-600">
                 - Rs. {{ formDiscount }}
                 </p>
-                <p v-if="description && description.trim() !== ''" class="text-sm text-gray-500">{{ description }}:</p>
-                <p v-if="description && description.trim() !== ''" class="text-right text-sm font-semibold text-gray-800">+ Rs. {{ description_price || '0.00' }}</p>
+
                 <p class="text-sm text-gray-500 font-bold">Grand Quotation Total:</p>
                 <p class="text-right text-sm font-semibold text-gray-800 font-bold">Rs. {{ totalquotation }}</p>
 
@@ -880,6 +898,30 @@ const downloadPdf = async () => {
 
   startY += 25;
 
+  // Print user-entered description as a full-width row under Billed To / Address
+  const quoteDescription = description.value || form.description || '';
+  if (quoteDescription && quoteDescription.trim() !== '') {
+    const descLines = pdf.splitTextToSize(quoteDescription, pageWidth - 40);
+    const descHeight = Math.max(10, descLines.length * 7 + 6);
+    if (startY + descHeight > 250) {
+      pdf.addPage();
+      startY = 20;
+    }
+
+    pdf.rect(10, startY, pageWidth - 20, descHeight, 'D');
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Description:', 15, startY + 7);
+    pdf.setFont('helvetica', 'normal');
+    const descX = 45;
+    let descY = startY + 7;
+    descLines.forEach((line) => {
+      pdf.text(line, descX, descY);
+      descY += 7;
+    });
+
+    startY += descHeight + 6;
+  }
+
   // Table Header
   pdf.setFillColor(240, 240, 240);
   pdf.rect(10, startY, pageWidth - 20, 10, 'FD');
@@ -901,17 +943,11 @@ const downloadPdf = async () => {
   const rowHeight = 10;
   pdf.setFont('helvetica', 'normal');
 
-  products.value.forEach((item) => {
+ products.value.forEach((item) => {
     if (currentY > 250) {
       pdf.addPage();
       currentY = 20;
     }
-
-    pdf.rect(10, currentY, pageWidth - 20, rowHeight, 'D');
-    pdf.line(55, currentY, 55, currentY + rowHeight);
-    pdf.line(95, currentY, 95, currentY + rowHeight);
-    pdf.line(125, currentY, 125, currentY + rowHeight);
-    pdf.line(160, currentY, 160, currentY + rowHeight);
 
     const itemName = item.name || 'Unnamed Product';
     const quantity = item.quantity?.toString() || '0';
@@ -925,33 +961,37 @@ const downloadPdf = async () => {
       ? item.discounted_price 
       : item.selling_price) * item.quantity).toString();
 
+    // Split product name into multiple lines if too long (max width: 40 units for product column)
+    const nameLines = pdf.splitTextToSize(itemName, 40);
+    const actualRowHeight = Math.max(rowHeight, nameLines.length * 5 + 4);
+
+    pdf.rect(10, currentY, pageWidth - 20, actualRowHeight, 'D');
+    pdf.line(55, currentY, 55, currentY + actualRowHeight);
+    pdf.line(95, currentY, 95, currentY + actualRowHeight);
+    pdf.line(125, currentY, 125, currentY + actualRowHeight);
+    pdf.line(160, currentY, 160, currentY + actualRowHeight);
+
     pdf.setTextColor(0, 0, 0);
-    pdf.text(itemName, 15, currentY + 7);
-    pdf.text(quantity, 80, currentY + 7, { align: 'center' });
-    pdf.text(discount, 105, currentY + 7, { align: 'center' });
-    pdf.text(price, 140, currentY + 7, { align: 'center' });
-    pdf.text(subtotal, 175, currentY + 7, { align: 'center' });
+    
+    // Draw product name with multiple lines if needed
+    let nameY = currentY + 5;
+    nameLines.forEach((line) => {
+      pdf.text(line, 15, nameY);
+      nameY += 5;
+    });
 
-    currentY += rowHeight;
-  });
+    // Center other values vertically in the row
+    const centerY = currentY + (actualRowHeight / 2) + 2;
+    pdf.text(quantity, 80, centerY, { align: 'center' });
+    pdf.text(discount, 105, centerY, { align: 'center' });
+    pdf.text(price, 140, centerY, { align: 'center' });
+    pdf.text(subtotal, 175, centerY, { align: 'center' });
 
-  if (description.value) {
-    if (currentY > 250) {
-      pdf.addPage();
-      currentY = 20;
-    }
-
-    pdf.rect(10, currentY, pageWidth - 20, rowHeight, 'D');
-    pdf.line(55, currentY, 55, currentY + rowHeight);
-    pdf.line(95, currentY, 95, currentY + rowHeight);
-    pdf.line(125, currentY, 125, currentY + rowHeight);
-    pdf.line(160, currentY, 160, currentY + rowHeight);
-    pdf.text(description.value, 15, currentY + 7);
-    pdf.text('-', 105, currentY + 7, { align: 'center' }); // No discount for description
-    pdf.text('-', 140, currentY + 7, { align: 'center' }); // No unit price for description
-    pdf.text(description_price.value || '0', 175, currentY + 7, { align: 'center' });
-    currentY += rowHeight;
+    currentY += actualRowHeight;
   }
+);
+
+  
 
   // Grand Total
   pdf.rect(10, currentY, pageWidth - 20, rowHeight, 'D');
@@ -961,8 +1001,8 @@ const downloadPdf = async () => {
   pdf.line(160, currentY, 160, currentY + rowHeight);
   pdf.setFont('helvetica', 'bold');
   pdf.text('Grand Total', 15, currentY + 7);
-  pdf.text('-', 105, currentY + 7, { align: 'center' }); // No discount for grand total
-  pdf.text('-', 140, currentY + 7, { align: 'center' }); // No unit price for grand total
+  pdf.text('', 105, currentY + 7, { align: 'center' }); // No discount for grand total
+  pdf.text('', 140, currentY + 7, { align: 'center' }); // No unit price for grand total
   pdf.text(totalquotation.value?.toString() || '0', 175, currentY + 7, { align: 'center' });
 
   // Footer

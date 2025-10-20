@@ -783,7 +783,7 @@ const downloadPdf = async () => {
   // Add Logo (positioned top-right)
   try {
     const logoImg = new Image();
-    logoImg.src = '/images/billlogo.png';
+    logoImg.src = '/images/billlogo1.png';
     logoImg.crossOrigin = 'Anonymous';
 
     await new Promise((resolve, reject) => {

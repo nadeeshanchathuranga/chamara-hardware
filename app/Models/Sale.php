@@ -21,6 +21,7 @@ class Sale extends Model
         'total_cost',
         'cash',
         'custom_discount',
+        'transport_charge',
     ];
 
 

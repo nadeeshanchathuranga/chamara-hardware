@@ -332,6 +332,13 @@
                                 </span>
                             </div>
                             <div class="flex items-center justify-between w-full px-8 pt-4 pb-4 border-b border-black">
+                                <p class="text-xl text-black">Transport Charge</p>
+                                <span>
+                                    <CurrencyInput v-model="transport_charge" placeholder="Enter value" class="rounded-md px-2 py-1 text-black text-md" />
+                                    <span class="ml-2">LKR</span>
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between w-full px-8 pt-4 pb-4 border-b border-black">
                                 <p class="text-xl text-black">Cash</p>
                                 <span>
                                     <CurrencyInput v-model="cash" :options="{ currency: 'EUR' }" />
@@ -428,7 +435,7 @@
         :employee="employee" :cashier="loggedInUser" :customer="customer" :orderid="orderid" :cash="cash"
         :balance="balance" :subTotal="subtotal" :totalDiscount="totalDiscount" :total="total"
         :custom_discount_type="custom_discount_type"
-        :custom_discount="custom_discount" :paymentMethod="selectedPaymentMethod" :kokoSurcharge="kokoSurcharge" />
+        :custom_discount="custom_discount" :paymentMethod="selectedPaymentMethod" :kokoSurcharge="kokoSurcharge" :transport_charge="transport_charge" />
     <AlertModel v-model:open="isAlertModalOpen" :message="message" />
 
     <SelectProductModel v-model:open="isSelectModalOpen" :allcategories="allcategories" :colors="colors" :sizes="sizes" :suppliers="suppliers"
@@ -579,6 +586,7 @@ const message = ref("");
 const appliedCoupon = ref(null);
 const cash = ref(0);
 const custom_discount = ref(0);
+const transport_charge = ref(0);
 const isSelectModalOpen = ref(false);
 // const isSelectChequeModalOpen = ref(false);
 const custom_discount_type = ref('percent');
@@ -800,6 +808,7 @@ const submitOrder = async () => {
             cash: cash.value,
             custom_discount: custom_discount.value,
             custom_discount_type: custom_discount_type.value, // Add this
+            transport_charge: transport_charge.value,
             appliedCoupon: appliedCoupon.value, // Add this
             return_items: returnItemsData // Add this
         });
@@ -928,6 +937,7 @@ const total = computed(() => {
     const discountValue = parseFloat(totalDiscount.value) || 0;
     const customDiscount = parseFloat(custom_discount.value) || 0;
     const returnAmount = parseFloat(returnBillTotal.value) || 0;
+    const transportValue = parseFloat(transport_charge.value) || 0;
 
     let customValue = 0;
 
@@ -937,7 +947,7 @@ const total = computed(() => {
         customValue = customDiscount;
     }
 
-    let baseTotal = subtotalValue - discountValue - customValue - returnAmount;
+    let baseTotal = subtotalValue - discountValue - customValue - returnAmount + transportValue;
     
     // Add Koko surcharge if Koko payment method is selected
     if (selectedPaymentMethod.value === 'Koko') {

@@ -149,6 +149,7 @@ class PosController extends Controller
         // Calculate custom discount
         $customDiscount = floatval($request->input('custom_discount', 0));
         $customDiscountType = $request->input('custom_discount_type', 'percent');
+        $transportCharge = floatval($request->input('transport_charge', 0));
         
         $customValue = 0;
         if ($customDiscountType === 'percent') {
@@ -157,8 +158,8 @@ class PosController extends Controller
             $customValue = $customDiscount;
         }
 
-        // Calculate base total after discounts
-        $baseTotal = $totalAmount - $totalDiscount - $customValue - $totalReturnAmount;
+        // Calculate base total after discounts and adding transport charge
+        $baseTotal = $totalAmount - $totalDiscount - $customValue - $totalReturnAmount + $transportCharge;
 
         // Add Koko surcharge if payment method is Koko
         $finalTotal = $baseTotal;
@@ -212,8 +213,7 @@ class PosController extends Controller
                 'sale_date' => now()->toDateString(), // Current date
                 'cash' => $request->input('cash'),
                 'custom_discount' => $request->input('custom_discount'),
-                
-
+                'transport_charge' => $transportCharge,
             ]);
 
             foreach ($products as $product) {

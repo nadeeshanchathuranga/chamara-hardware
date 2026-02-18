@@ -287,7 +287,7 @@
                       type="number"
                       step="0.01"
                       id="cost_price"
-                      v-model="form.cost_price"
+                      v-model.number="form.cost_price"
                       class="w-full px-4 py-2 mt-2 text-black bg-white rounded-md focus:outline-none focus:ring focus:ring-blue-600"
                       placeholder="Enter cost price"
                       required
@@ -299,22 +299,73 @@
                       {{ form.errors.cost_price }}
                     </span>
                   </div>
+                  <!-- Margin Type selector -->
+                  <div class="w-full">
+                    <label
+                      for="margin_type"
+                      class="block text-sm font-medium text-gray-300"
+                      >Margin Type:</label
+                    >
+                    <select
+                      v-model="form.margin_type"
+                      id="margin_type"
+                      class="w-full px-4 py-2 mt-2 text-black bg-white rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+                    >
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="fixed">Fixed Price</option>
+                    </select>
+                  </div>
+                  <!-- Margin Value input -->
+                  <div class="w-full">
+                    <label
+                      for="margin_value"
+                      class="block text-sm font-medium text-gray-300"
+                      >{{ form.margin_type === 'percentage' ? 'Margin (%)' : 'Margin (Fixed)' }}:</label
+                    >
+                    <input
+                      type="number"
+                      step="0.01"
+                      id="margin_value"
+                      v-model.number="form.margin_value"
+                      class="w-full px-4 py-2 mt-2 text-black bg-white rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+                      :placeholder="form.margin_type === 'percentage' ? 'Enter margin percentage' : 'Enter margin amount'"
+                    />
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-8 mt-6">
+                  <!-- Stock Quantity -->
+                  <div class="w-full">
+                    <label
+                      for="stock_quantity"
+                      class="block text-sm font-medium text-gray-300"
+                      >Stock Quantity:</label
+                    >
+                    <input
+                      type="number"
+                      id="stock_quantity"
+                      v-model="form.stock_quantity"
+                      class="w-full px-4 py-2 mt-2 text-black bg-white rounded-md focus:outline-none focus:ring focus:ring-blue-600"
+                      placeholder="Stock quantity"
+                      required
+                    />
+                  </div>
 
                   <!-- Selling Price input -->
                   <div class="w-full">
                     <label
                       for="selling_price"
                       class="block text-sm font-medium text-gray-300"
-                      >Selling Price:</label
+                      >Selling Price (Auto-calculated):</label
                     >
                     <input
                       type="text"
                       id="selling_price"
                       v-model="form.selling_price"
                       class="w-full px-4 py-2 mt-2 text-black bg-white rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                      placeholder="Enter selling price"
+                      placeholder="Auto-calculated from cost price and margin"
                       @blur="updateDiscountedPrice"
-                      required
+                      readonly
                     />
                     <span
                       v-if="form.errors.selling_price"
@@ -381,23 +432,6 @@
                 </div>
 
                 <div class="flex items-center gap-8 mt-6">
-                  <div class="w-full">
-                    <label
-                      for="stock_quantity"
-                      class="block text-sm font-medium text-gray-300"
-                      >Stock Quantity:</label
-                    >
-
-                    <input
-                      type="number"
-                      id="stock_quantity"
-                      v-model="form.stock_quantity"
-                      class="w-full px-4 py-2 mt-2 text-black bg-white rounded-md focus:outline-none focus:ring focus:ring-blue-600"
-                      placeholder="Stock quantity"
-                      required
-                    />
-                  </div>
-
                   <div class="w-full">
                     <label
                       for="image"
@@ -581,6 +615,8 @@ const form = useForm({
   size_id: "",
   color_id: "",
   cost_price: null,
+  margin_type: "percentage", // 'percentage' or 'fixed'
+  margin_value: null,
   discount: 0,
   selling_price: null,
   discounted_price: null,
@@ -604,6 +640,21 @@ function limitToTwoDecimals(value) {
   return match ? parseFloat(match[0]) : value;
 }
 
+// Function to calculate selling price based on cost price and margin
+function calculateSellingPrice() {
+  if (form.cost_price && form.margin_value !== null) {
+    let sellingPrice;
+    if (form.margin_type === "percentage") {
+      const marginAmount = (form.cost_price * form.margin_value) / 100;
+      sellingPrice = parseFloat(form.cost_price) + marginAmount;
+    } else {
+      // fixed price
+      sellingPrice = parseFloat(form.cost_price) + parseFloat(form.margin_value);
+    }
+    form.selling_price = limitToTwoDecimals(sellingPrice);
+  }
+}
+
 // Function to update discounted price based on selling price and discount
 function updateDiscountedPrice() {
   if (form.selling_price && form.discount) {
@@ -625,6 +676,14 @@ function updateDiscount() {
 }
  
 
+// Watch for changes in cost_price, margin_value, or margin_type to recalculate selling_price
+watch(
+  () => [form.cost_price, form.margin_value, form.margin_type],
+  () => {
+    calculateSellingPrice();
+  }
+);
+
 // Watch for changes in selectedProduct and populate form
 watch(
   () => selectedProduct,
@@ -638,6 +697,8 @@ watch(
       form.size_id = newValue.size_id || "";
       form.color_id = newValue.color_id || "";
       form.cost_price = newValue.cost_price || null;
+      form.margin_type = newValue.margin_type || "percentage";
+      form.margin_value = newValue.margin_value || null;
       form.discount = newValue.discount || 0;
       form.selling_price = newValue.selling_price || null;
       form.discounted_price = newValue.discounted_price || null;

@@ -187,6 +187,15 @@
                 </span>
               </div>
               <div class="flex items-center justify-between w-full px-16 pt-4 pb-4 border-b border-black">
+                <p class="text-xl text-black">Transport Charge</p>
+                <span>
+                  <CurrencyInput
+                    v-model="transport_charge"
+                  />
+                  <span class="ml-2">LKR</span>
+                </span>
+              </div>
+              <div class="flex items-center justify-between w-full px-16 pt-4 pb-4 border-b border-black">
                 <p class="text-xl text-black">Cash</p>
                 <span>
                   <CurrencyInput
@@ -290,6 +299,7 @@ const message = ref("");
 const cash = ref(0);
 const product_name = ref('');
 const custom_discount = ref(0);
+const transport_charge = ref(0);
 const product_quantity = ref(1);
 const product_unit_price = ref(0);
 
@@ -302,21 +312,36 @@ const handleModalOpenUpdate = (newValue) => {
 };
 
 const addProduct = () => {
-  if (product_name.value && product_quantity.value > 0 && product_unit_price.value > 0) {
-    products.value.push({
-      name: product_name.value,
-      quantity: parseFloat(product_quantity.value),
-      unitPrice: parseFloat(product_unit_price.value),
-      total: parseFloat(product_quantity.value) * parseFloat(product_unit_price.value)
-    });
-
-    // Reset input fields after adding the product
-    product_name.value = '';
-    product_quantity.value = 1;
-    product_unit_price.value = 0;
-  } else {
-    alert("Please enter valid product details.");
+  // Validate and provide specific error messages
+  if (!product_name.value || product_name.value.trim() === '') {
+    alert("❌ Please enter Product Name");
+    return;
   }
+  
+  const qty = parseFloat(product_quantity.value) || 0;
+  if (qty <= 0) {
+    alert("❌ Quantity must be greater than 0");
+    return;
+  }
+  
+  const price = parseFloat(product_unit_price.value) || 0;
+  if (price <= 0) {
+    alert("❌ Unit Price must be greater than 0");
+    return;
+  }
+
+  // All validations passed - add product
+  products.value.push({
+    name: product_name.value,
+    quantity: qty,
+    unitPrice: price,
+    total: qty * price
+  });
+
+  // Reset input fields after adding the product
+  product_name.value = '';
+  product_quantity.value = 1;
+  product_unit_price.value = 0;
 };
 const incrementQuantity = (product) => {
   if (product) {
@@ -432,7 +457,8 @@ const totalDiscount = computed(() => {
 const total = computed(() => {
   const subtotalValue = parseFloat(subtotal.value);
   const discountValue = parseFloat(custom_discount.value) || 0;
-  return (subtotalValue - discountValue).toFixed(2);
+  const transportValue = parseFloat(transport_charge.value) || 0;
+  return (subtotalValue - discountValue + transportValue).toFixed(2);
 });
 
 const balance = computed(() => {
@@ -487,9 +513,10 @@ const removeProduct = (index) => {
   products.value.splice(index, 1);
 };
 
-watch([cash, custom_discount], ([newCash, newDiscount]) => {
+watch([cash, custom_discount, transport_charge], ([newCash, newDiscount, newTransport]) => {
   cash.value = parseFloat(newCash) || 0;
   custom_discount.value = parseFloat(newDiscount) || 0;
+  transport_charge.value = parseFloat(newTransport) || 0;
 });
 
 // Attach the keypress event listener when the component is mounted
@@ -674,6 +701,10 @@ const openPrintSlip = () => {
               <div>
                   <span>Custom Discount</span>
                   <span>${custom_discount.value} LKR</span>
+              </div>
+              <div>
+                  <span>Transport Charge</span>
+                  <span>${transport_charge.value} LKR</span>
               </div>
               <div>
                   <span>Total</span>

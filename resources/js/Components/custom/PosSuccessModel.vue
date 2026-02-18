@@ -98,8 +98,9 @@
        custom_discount: Number,
        custom_discount_type: String,
        paymentMethod: String,
-       kokoSurcharge: String
-   });
+       kokoSurcharge: String,
+       transport_charge: Number
+    });
 
    const handlePrintReceipt = () => {
        // Calculate totals from props.products
@@ -377,6 +378,10 @@
              ${props.custom_discount_type === 'percent' ? '%' :
                props.custom_discount_type === 'fixed' ? 'LKR' : ''}
            </span>
+         </div>
+         <div>
+           <span>Transport Charge</span>
+           <span>${(Number(props.transport_charge) || 0).toFixed(2)} LKR</span>
          </div>
          ${props.paymentMethod === 'Koko' ? `
          <div>

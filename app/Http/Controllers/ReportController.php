@@ -73,6 +73,7 @@ class ReportController extends Controller
           DB::raw('YEAR(sale_date) as year'),
           DB::raw('MONTH(sale_date) as month'),
           DB::raw('COUNT(*) as number_of_sales'),
+            DB::raw('SUM(transport_charge) as transport_charge'),
           DB::raw('SUM(total_amount) as total_amount')
       )
       ->groupBy(DB::raw('YEAR(sale_date), MONTH(sale_date)'))
@@ -90,6 +91,7 @@ class ReportController extends Controller
         'month' => $item->month,
         'month_name'=> DateTime::createFromFormat('!m', $item->month)->format('F'),
         'number_of_sales' => $item->number_of_sales,
+        'transport_charge' => $item->transport_charge ?? 0,
         'total_amount' => $item->total_amount,
         'date_range' => $item->year . '-' . str_pad($item->month, 2, '0', STR_PAD_LEFT) . '-01' . 
                        ' to ' . 

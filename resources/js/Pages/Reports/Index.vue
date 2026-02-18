@@ -612,6 +612,8 @@
           <th class="p-3 text-center font-semibold">QTY</th>
           <th class="p-3 text-center font-semibold">Sales QTY</th>
           <th class="p-3 text-center font-semibold">Cost Price (LKR)</th>
+          <th class="p-3 text-center font-semibold">Margin Type</th>
+          <th class="p-3 text-center font-semibold">Margin Value (LKR)</th>
           <th class="p-3 text-center font-semibold">Selling Price (LKR)</th>
           <th class="p-3 text-center font-semibold">Profit (LKR)</th>
           <th class="p-3 text-center font-semibold">Discount (%)</th>
@@ -631,6 +633,8 @@
           <td class="p-3 text-center">{{ product.stock_quantity }}</td>
           <td class="p-3 text-center">{{ product.sales_qty || "0" }}</td>
           <td class="p-3 text-center">{{ product.cost_price || "N/A" }}</td>
+          <td class="p-3 text-center">{{ product.margin_type || "N/A" }}</td>
+          <td class="p-3 text-center">{{ product.margin_value || "N/A" }}</td>
           <td class="p-3 text-center">{{ product.selling_price || "N/A" }}</td>
           <td class="p-3 text-center">
             {{ product.selling_price - product.cost_price || 0 }}
@@ -786,6 +790,7 @@
           <th class="p-3 text-center font-semibold">Month</th>
           <th class="p-3 text-center font-semibold">Date Range</th>
           <th class="p-3 text-center font-semibold">Number of Sales</th>
+          <th class="p-3 text-center font-semibold">Transport Charge</th>
           <th class="p-3 text-center font-semibold">Total Amount(LKR)</th>
         </tr>
       </thead>
@@ -800,6 +805,7 @@
           <td class="p-3 text-center">{{ monthlySale.month_name}} {{ monthlySale.year }}</td>
           <td class="p-3 text-center">{{ monthlySale.date_range }}</td>
           <td class="p-3 text-center">{{ monthlySale.number_of_sales }}</td>
+          <td class="p-3 text-center">{{ monthlySale.transport_charge }}</td>
           <td class="p-3 text-center">
             {{ monthlySale.total_amount.toLocaleString() }}
           </td>
@@ -1138,6 +1144,8 @@ const downloadPDFTable = () => {
     "QTY",
     "Sales QTY",
     "Cost Price (LKR)",
+    "Margin Type",
+    "Margin Value (LKR)",
     "Selling Price (LKR)",
     "Profit (LKR)",
     "Discount (%)",
@@ -1152,6 +1160,8 @@ const downloadPDFTable = () => {
     product.stock_quantity || "N/A",
     product.sales_qty || "0",
     product.cost_price || "N/A",
+      product.margin_type || "N/A",
+      product.margin_value || "N/A",
     product.selling_price || "N/A",
     product.selling_price - product.cost_price || 0,
     product.discount || "N/A",
@@ -1162,10 +1172,10 @@ const downloadPDFTable = () => {
   ]);
 
   // Calculate total sum of "Total Price"
-  const totalSum = tableRows.reduce((sum, row) => sum + row[9], 0);
+  const totalSum = tableRows.reduce((sum, row) => sum + row[11], 0);
 
   // Add a total row at the end
-  tableRows.push(["", "Total", "", "", "", "", "", "", "", totalSum.toFixed(2)]);
+  tableRows.push(["", "Total", "", "", "", "", "", "", "", "","" , totalSum.toFixed(2)]);
 
   // Adjust column widths
   doc.autoTable({
@@ -1177,15 +1187,17 @@ const downloadPDFTable = () => {
     headStyles: { fillColor: [44, 62, 80] },
     columnStyles: {
       0: { cellWidth: 8 },  // #
-      1: { cellWidth: 30 },  // Name (Increased for better visibility)
+      1: { cellWidth: 20 },  // Name (Increased for better visibility)
       2: { cellWidth: 12 },  // QTY
       3: { cellWidth: 15 },  // Sales QTY
       4: { cellWidth: 25 },  // Cost Price
-      5: { cellWidth: 25 },  // Selling Price
-      6: { cellWidth: 20 },  // Profit
-      7: { cellWidth: 15 },  // Discount
-      8: { cellWidth: 25 },  // Retail Value (Increased to prevent cut-off)
-      9: { cellWidth: 30 },  // Total Price (Increased to make it visible)
+      5: { cellWidth: 15 },  // Margin Type
+      6: { cellWidth: 15 },  // Margin Value
+      7: { cellWidth: 15 },  // Selling Price
+      8: { cellWidth: 20 },  // Profit
+      9: { cellWidth: 15 },  // Discount
+      10: { cellWidth: 15 }, // Retail Value (Increased to prevent cut-off)
+      11: { cellWidth: 15 }, // Total Price (Increased to make it visible)
     },
     margin: { left: 5, right: 10, top: 20 },
   });
@@ -1205,6 +1217,8 @@ const downloadTable = () => {
     "QTY": product.stock_quantity || "N/A",
     "Sales QTY": product.sales_qty || 0,
     "Cost Price (LKR)": product.cost_price || "N/A",
+    "Margin Type": product.margin_type || "N/A",
+    "Margin Value (LKR)": product.margin_value || "N/A",
     "Selling Price (LKR)": product.selling_price || "N/A",
     "Profit (LKR)": product.selling_price - product.cost_price || 0,
     "Discount (%)": product.discount || "N/A",
@@ -1226,6 +1240,8 @@ const downloadTable = () => {
       "QTY": "",
       "Sales QTY": "",
       "Cost Price (LKR)": "",
+      "Margin Type": "",
+      "Margin Value (LKR)": "",
       "Selling Price (LKR)": "",
       "Profit (LKR)": "",
       "Discount (%)": "",
@@ -1248,6 +1264,8 @@ const downloadTable = () => {
     { wch: 10 }, // QTY
     { wch: 10 }, // Sales QTY
     { wch: 15 }, // Cost Price
+    { wch: 15 }, // Margin Type
+    { wch: 15 }, // Margin Value
     { wch: 15 }, // Selling Price
     { wch: 15 }, // Profit
     { wch: 12 }, // Discount
@@ -1614,6 +1632,7 @@ const  downloadPDFTableMonthly= () => {
     "Month",
     "Date Range",
     "Number of Sales",
+    "Transport Charge(LKR)",
     "Total Amount(LKR)",
   ];
 
@@ -1623,15 +1642,16 @@ const  downloadPDFTableMonthly= () => {
     monthlySale.month_name + ' ' + monthlySale.year || "N/A",
     monthlySale.date_range || "N/A",
     monthlySale.number_of_sales || 0,
+    monthlySale.transport_charge || 0,
     Number(monthlySale.total_amount )|| 0,
     
   ]);
 
   // Calculate total sum of "Total Price"
-  const totalSum = tableRows.reduce((sum, row) => sum + row[4], 0);
+  const totalSum = tableRows.reduce((sum, row) => sum + row[5], 0);
 
   // Add a total row at the end
-  tableRows.push(["", "Total", "","", totalSum.toFixed(2)]);
+  tableRows.push(["", "Total", "","","", totalSum.toFixed(2)]);
 
   // Adjust column widths
   doc.autoTable({
@@ -1662,6 +1682,7 @@ const downloadtableMonthly = () => {
     "Month": monthlySale.month_name + ' ' + monthlySale.year,
     "Date Range": monthlySale.date_range || "N/A",
     "Number of Sales": monthlySale.number_of_sales || 0,
+    "Transport Charge(LKR)": monthlySale.transport_charge || 0,
     "Total Amount(LKR)": monthlySale.total_amount || 0,
 
   }));
@@ -1678,6 +1699,7 @@ const downloadtableMonthly = () => {
       "Month": "",
       "Date Range": "",
       "Number of Sales": "",
+      "Transport Charge(LKR)": "",
       "Total Amount": totalSum,
     }
   ];
@@ -1695,6 +1717,8 @@ const downloadtableMonthly = () => {
     { wch: 25 }, // Name
     { wch: 25 }, // QTY
     { wch: 25 }, // Sales QTY
+    { wch: 25 }, // Transport Charge
+    { wch: 25 }, // Total Amount
   ];
   ws['!cols'] = colWidths;
 
@@ -1708,7 +1732,7 @@ const downloadtableMonthly = () => {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
   });
 
-  saveAs(blob, "Monlysales.xlsx");
+  saveAs(blob, "MonthlySales.xlsx");
 };
 
 

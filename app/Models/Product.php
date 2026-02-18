@@ -20,6 +20,8 @@ class Product extends Model
         'discounted_price',
         'color_id',
         'cost_price',
+        'margin_type',
+        'margin_value',
         'selling_price',
         'stock_quantity',
         'barcode',
